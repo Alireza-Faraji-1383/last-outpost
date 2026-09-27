@@ -21,12 +21,16 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.common.extensions.IForgeMenuType;
+import dev.exodus.supply.menu.SupplyRadioMenu;
 
 public final class ExodusSupplyRegistry {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ExodusMod.MOD_ID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ExodusMod.MOD_ID);
     public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ExodusMod.MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, ExodusMod.MOD_ID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, ExodusMod.MOD_ID);
 
     private static BlockBehaviour.Properties protectedMetal() {
         return BlockBehaviour.Properties.of().strength(-1.0F, 3_600_000.0F).sound(SoundType.METAL);
@@ -55,6 +59,8 @@ public final class ExodusSupplyRegistry {
             () -> BlockEntityType.Builder.of(SupplyRadioBlockEntity::new, BASIC_SUPPLY_RADIO.get(), SPECIAL_SUPPLY_RADIO.get()).build(null));
     public static final RegistryObject<BlockEntityType<DropBeaconBlockEntity>> DROP_BEACON_ENTITY = BLOCK_ENTITIES.register("drop_beacon",
             () -> BlockEntityType.Builder.of(DropBeaconBlockEntity::new, DROP_BEACON.get()).build(null));
+    public static final RegistryObject<MenuType<SupplyRadioMenu>> SUPPLY_RADIO_MENU = MENUS.register("supply_radio",
+            () -> IForgeMenuType.create(SupplyRadioMenu::client));
 
     private ExodusSupplyRegistry() {}
 
@@ -67,5 +73,6 @@ public final class ExodusSupplyRegistry {
         ITEMS.register(bus);
         ENTITIES.register(bus);
         BLOCK_ENTITIES.register(bus);
+        MENUS.register(bus);
     }
 }
