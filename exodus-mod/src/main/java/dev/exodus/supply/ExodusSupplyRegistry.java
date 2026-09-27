@@ -9,6 +9,7 @@ import dev.exodus.supply.entity.SupplyDropEntity;
 import dev.exodus.supply.item.LinkingToolItem;
 import dev.exodus.supply.blockentity.DropBeaconBlockEntity;
 import dev.exodus.supply.blockentity.SupplyRadioBlockEntity;
+import dev.exodus.supply.blockentity.SupplyCrateBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -59,6 +60,8 @@ public final class ExodusSupplyRegistry {
             () -> BlockEntityType.Builder.of(SupplyRadioBlockEntity::new, BASIC_SUPPLY_RADIO.get(), SPECIAL_SUPPLY_RADIO.get()).build(null));
     public static final RegistryObject<BlockEntityType<DropBeaconBlockEntity>> DROP_BEACON_ENTITY = BLOCK_ENTITIES.register("drop_beacon",
             () -> BlockEntityType.Builder.of(DropBeaconBlockEntity::new, DROP_BEACON.get()).build(null));
+    public static final RegistryObject<BlockEntityType<SupplyCrateBlockEntity>> SUPPLY_CRATE_ENTITY = BLOCK_ENTITIES.register("supply_crate",
+            () -> BlockEntityType.Builder.of(SupplyCrateBlockEntity::new, SUPPLY_CRATE.get()).build(null));
     public static final RegistryObject<MenuType<SupplyRadioMenu>> SUPPLY_RADIO_MENU = MENUS.register("supply_radio",
             () -> IForgeMenuType.create(SupplyRadioMenu::client));
 

@@ -13,6 +13,8 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import dev.exodus.supply.request.SupplyRequestService;
+import net.minecraft.server.level.ServerPlayer;
 
 public class SupplyRadioMenu extends AbstractContainerMenu {
     public record Entry(String id,String name,String icon,String cost,int remaining,long cooldownUntil){}
@@ -25,4 +27,5 @@ public class SupplyRadioMenu extends AbstractContainerMenu {
     public List<Entry> entries(){return entries;} public BlockPos pos(){return pos;}
     @Override public boolean stillValid(Player player){return player.distanceToSqr(pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5)<=64&&player.level().getBlockEntity(pos) instanceof SupplyRadioBlockEntity;}
     @Override public ItemStack quickMoveStack(Player player,int slot){return ItemStack.EMPTY;}
+    @Override public boolean clickMenuButton(Player player,int button){if(player instanceof ServerPlayer sp&&button>=0&&button<entries.size())return SupplyRequestService.request(sp,pos,entries.get(button).id());return false;}
 }
