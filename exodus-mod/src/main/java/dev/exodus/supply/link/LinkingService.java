@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import java.util.UUID;
 
 public final class LinkingService {
     private static final String KEY="ExodusRadioSelection";
@@ -37,8 +38,10 @@ public final class LinkingService {
         var border=level.getWorldBorder();boolean inside=border.isWithinBounds(radioPos)&&border.isWithinBounds(pos);
         LinkPolicy.Result result=LinkPolicy.evaluate(new LinkCandidate(data.state==MatchState.RUNNING,MatchManager.isActiveMatchPlayer(player),true,inside,Math.sqrt(radioPos.distSqr(pos)),ExodusConfig.RADIO_LINK_RANGE.get(),exact,existing));
         if(result!=LinkPolicy.Result.ALLOW)return deny(player,message(result));
+        UUID previousOwner=radio.ownerId();
         radio.claim(data.matchId,player.getUUID(),player.getGameProfile().getName(),s.dimension(),pos);
         beacon.claim(data.matchId,player.getUUID(),player.getGameProfile().getName(),s.dimension(),radioPos);
+        if(previousOwner!=null&&!previousOwner.equals(player.getUUID())){ServerPlayer oldOwner=player.server.getPlayerList().getPlayer(previousOwner);if(oldOwner!=null)oldOwner.sendSystemMessage(Component.literal("Your Supply Radio was taken by "+player.getGameProfile().getName()+"."));}
         tool.getOrCreateTag().remove(KEY);tool.shrink(1);player.sendSystemMessage(Component.literal("Supply Radio linked to Drop Beacon."));return InteractionResult.CONSUME;
     }
     private static InteractionResult deny(ServerPlayer p,String m){p.sendSystemMessage(Component.literal(m));return InteractionResult.FAIL;}

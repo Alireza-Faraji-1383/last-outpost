@@ -24,6 +24,7 @@ public class SupplyCrateBlockEntity extends RandomizableContainerBlockEntity {
     @Override protected Component getDefaultName(){return Component.literal(name);}
     @Override protected AbstractContainerMenu createMenu(int id,Inventory inv){return ChestMenu.sixRows(id,inv,this);}
     @Override public int getContainerSize(){return 54;}
+    @Override public boolean canPlaceItem(int slot,ItemStack stack){return false;}
     @Override protected NonNullList<ItemStack> getItems(){return items;}
     @Override protected void setItems(NonNullList<ItemStack> value){items=value;}
     public static void tick(ServerLevel level,BlockPos pos,BlockState state,SupplyCrateBlockEntity crate){if(crate.lootTable!=null)return;if(crate.isEmpty()){if(crate.emptySince<0){crate.emptySince=level.getGameTime();crate.setChanged();}else if(level.getGameTime()-crate.emptySince>=ExodusConfig.EMPTY_CRATE_SECONDS.get()*20L)level.removeBlock(pos,false);}}
