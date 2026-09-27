@@ -25,6 +25,8 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import dev.exodus.supply.menu.SupplyRadioMenu;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 
 public final class ExodusSupplyRegistry {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ExodusMod.MOD_ID);
@@ -77,5 +79,18 @@ public final class ExodusSupplyRegistry {
         ENTITIES.register(bus);
         BLOCK_ENTITIES.register(bus);
         MENUS.register(bus);
+        bus.addListener(ExodusSupplyRegistry::addCreativeTabItems);
+    }
+
+    private static void addCreativeTabItems(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+            event.accept(BASIC_SUPPLY_RADIO_ITEM.get());
+            event.accept(SPECIAL_SUPPLY_RADIO_ITEM.get());
+            event.accept(DROP_BEACON_ITEM.get());
+            event.accept(SUPPLY_CRATE_ITEM.get());
+        }
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(LINKING_TOOL.get());
+        }
     }
 }
