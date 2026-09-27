@@ -7,6 +7,9 @@ import dev.exodus.supply.block.SupplyRadioBlock;
 import dev.exodus.supply.domain.RadioType;
 import dev.exodus.supply.entity.SupplyDropEntity;
 import dev.exodus.supply.item.LinkingToolItem;
+import dev.exodus.supply.blockentity.DropBeaconBlockEntity;
+import dev.exodus.supply.blockentity.SupplyRadioBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
@@ -23,6 +26,7 @@ public final class ExodusSupplyRegistry {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, ExodusMod.MOD_ID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ExodusMod.MOD_ID);
     public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ExodusMod.MOD_ID);
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, ExodusMod.MOD_ID);
 
     private static BlockBehaviour.Properties protectedMetal() {
         return BlockBehaviour.Properties.of().strength(-1.0F, 3_600_000.0F).sound(SoundType.METAL);
@@ -47,6 +51,10 @@ public final class ExodusSupplyRegistry {
     public static final RegistryObject<EntityType<SupplyDropEntity>> SUPPLY_DROP = ENTITIES.register("supply_drop",
             () -> EntityType.Builder.<SupplyDropEntity>of(SupplyDropEntity::new, MobCategory.MISC)
                     .sized(1.0F, 2.5F).clientTrackingRange(10).updateInterval(1).build("supply_drop"));
+    public static final RegistryObject<BlockEntityType<SupplyRadioBlockEntity>> SUPPLY_RADIO_ENTITY = BLOCK_ENTITIES.register("supply_radio",
+            () -> BlockEntityType.Builder.of(SupplyRadioBlockEntity::new, BASIC_SUPPLY_RADIO.get(), SPECIAL_SUPPLY_RADIO.get()).build(null));
+    public static final RegistryObject<BlockEntityType<DropBeaconBlockEntity>> DROP_BEACON_ENTITY = BLOCK_ENTITIES.register("drop_beacon",
+            () -> BlockEntityType.Builder.of(DropBeaconBlockEntity::new, DROP_BEACON.get()).build(null));
 
     private ExodusSupplyRegistry() {}
 
@@ -58,5 +66,6 @@ public final class ExodusSupplyRegistry {
         BLOCKS.register(bus);
         ITEMS.register(bus);
         ENTITIES.register(bus);
+        BLOCK_ENTITIES.register(bus);
     }
 }
