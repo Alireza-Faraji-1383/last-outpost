@@ -1,0 +1,59 @@
+$ErrorActionPreference = "Stop"
+
+$minecraftRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$builder = Join-Path $PSScriptRoot "build-curseforge-pack.ps1"
+$output = Join-Path $minecraftRoot "dist\Project-Exodus-0.1.0-CurseForge.zip"
+
+if (-not (Test-Path -LiteralPath $builder)) {
+    throw "Missing CurseForge pack builder: $builder"
+}
+
+& $builder -MinecraftRoot $minecraftRoot -OutputPath $output
+
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$verificationRoot = Join-Path $minecraftRoot "exodus-mod\build\curseforge-pack-test"
+if (Test-Path -LiteralPath $verificationRoot) {
+    Remove-Item -LiteralPath $verificationRoot -Recurse -Force
+}
+[System.IO.Compression.ZipFile]::ExtractToDirectory($output, $verificationRoot)
+
+$manifestPath = Join-Path $verificationRoot "manifest.json"
+if (-not (Test-Path -LiteralPath $manifestPath)) {
+    throw "manifest.json is missing from the archive root."
+}
+
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+if ($manifest.manifestType -ne "minecraftModpack" -or $manifest.manifestVersion -ne 1) {
+    throw "Unexpected CurseForge manifest type or version."
+}
+if ($manifest.minecraft.version -ne "1.20.1") {
+    throw "Unexpected Minecraft version."
+}
+if ($manifest.minecraft.modLoaders[0].id -ne "forge-47.4.10" -or -not $manifest.minecraft.modLoaders[0].primary) {
+    throw "Unexpected Forge loader."
+}
+$expectedPublicMods = @(Get-ChildItem -LiteralPath (Join-Path $minecraftRoot "mods") -File -Filter "*.jar" |
+    Where-Object { $_.Name -notin @("exodus-0.1.0.jar", "jei-1.20.1-forge-15.56.0.205.jar") })
+if (@($manifest.files).Count -ne $expectedPublicMods.Count) {
+    throw "Expected $($expectedPublicMods.Count) CurseForge file references, found $(@($manifest.files).Count)."
+}
+
+$duplicates = @($manifest.files | Group-Object projectID | Where-Object Count -gt 1)
+if ($duplicates.Count -ne 0) {
+    throw "The manifest contains duplicate CurseForge projects."
+}
+
+$overrideMods = @(Get-ChildItem -LiteralPath (Join-Path $verificationRoot "overrides\mods") -File -Filter "*.jar")
+if ($overrideMods.Count -ne 1 -or $overrideMods[0].Name -ne "exodus-0.1.0.jar") {
+    throw "Only exodus-0.1.0.jar may be bundled in overrides/mods."
+}
+
+if (Test-Path -LiteralPath (Join-Path $verificationRoot "overrides\mods\jei-1.20.1-forge-15.56.0.205.jar")) {
+    throw "The old JEI version must not be bundled."
+}
+
+if (Test-Path -LiteralPath (Join-Path $verificationRoot "overrides\tacz")) {
+    throw "Extracted TACZ content must not be bundled because it is already present in the CurseForge mods."
+}
+
+Write-Output "PASS: CurseForge manifest has $($expectedPublicMods.Count) unique public mods and only Exodus is bundled."
