@@ -1,0 +1,22 @@
+# This repository tracks only Project Exodus source and documentation.
+# Minecraft worlds, logs, third-party mods, caches, and user data stay local.
+/*
+
+!/.gitignore
+!/AGENTS.md
+!/EXODUS_TESTING.md
+!/docs/
+!/docs/**
+!/exodus-mod/
+!/exodus-mod/**
+
+# Optional user-authored Exodus structures may be tracked later.
+!/kubejs/
+/kubejs/*
+!/kubejs/data/
+/kubejs/data/*
+!/kubejs/data/exodus/
+!/kubejs/data/exodus/**
+
+# Never track built artifacts copied into the live instance.
+/mods/
