@@ -9,7 +9,9 @@ public final class ExodusConfig {
             BORDER_SAFE_DISTANCE, MAX_LOCATION_ATTEMPTS, MAX_ALLOCATION_ROUNDS, MAX_RANDOM_CENTER_ATTEMPTS,
             RANDOM_CENTER_SEARCH_RADIUS, MAX_PLAYERS, MAX_HEIGHT_VARIATION, CHECKS_PER_TICK,
             STARTING_TIMEOUT_SECONDS, DISCONNECT_GRACE_SECONDS, SPAWN_SEARCH_RADIUS,
-            BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z;
+            BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z,
+            RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
+            LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS;
     public static final ForgeConfigSpec.BooleanValue DEV_FALLBACK;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> STRUCTURES;
 
@@ -35,6 +37,14 @@ public final class ExodusConfig {
         BASE_PLAYER_OFFSET_Z = b.defineInRange("basePlayerOffsetZ", 0, -128, 128);
         DEV_FALLBACK = b.define("enableDevFallback", false);
         STRUCTURES = b.defineList("starterStructures", List.of("exodus:starter_base"), o -> o instanceof String);
+        b.pop();
+        b.push("supplyDrops");
+        RADIO_LINK_RANGE = b.defineInRange("radioLinkRange", 128, 1, 4096);
+        DROP_SPAWN_HEIGHT = b.defineInRange("dropSpawnHeight", 80, 8, 512);
+        DROP_SPEED_MILLIBLOCKS = b.defineInRange("dropSpeedMilliblocksPerTick", 125, 10, 1000);
+        LANDING_CLEARANCE = b.defineInRange("landingClearance", 3, 0, 16);
+        LANDING_RETRY_SECONDS = b.defineInRange("landingRetrySeconds", 10, 1, 60);
+        EMPTY_CRATE_SECONDS = b.defineInRange("emptyCrateRemovalSeconds", 30, 1, 600);
         b.pop();
         SPEC = b.build();
     }
