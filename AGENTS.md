@@ -8,7 +8,7 @@ Project Exodus is a Minecraft 1.20.1 Forge minigame foundation. The active game 
 
 Build only the foundation: admin commands, match lifecycle, safe base allocation, structure placement, player/spectator tracking, persistence/recovery, border management, return-to-spawn behavior, status, and logging.
 
-Do not add rockets, escape/win conditions, airdrops, NPCs, vehicles, guns, raids, teams, alliances, trading, PvP rules, respawn rules, loot, enemy waves, day/night progression, or HUD/UI.
+Supply drops are the sole approved exception to this foundation phase, as specified in `docs/superpowers/specs/2026-09-27-project-exodus-supply-drops-design.md`. Do not add rockets, escape/win conditions, other airdrops, NPCs, vehicles, guns, raids, teams, alliances, trading, PvP rules, respawn rules, other loot systems, enemy waves, day/night progression, or unrelated HUD/UI.
 
 ## Agreed behavior
 

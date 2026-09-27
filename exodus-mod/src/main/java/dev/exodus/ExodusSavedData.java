@@ -11,6 +11,7 @@ import java.util.*;
 
 public final class ExodusSavedData extends SavedData {
     public MatchState state = MatchState.IDLE;
+    public UUID matchId;
     public String dimension = "";
     public int centerX, centerZ;
     public long startMillis, allocationSeed;
@@ -30,6 +31,7 @@ public final class ExodusSavedData extends SavedData {
     public static ExodusSavedData load(CompoundTag tag) {
         var d = new ExodusSavedData();
         try { d.state = MatchState.valueOf(tag.getString("state")); } catch (Exception ignored) {}
+        if (tag.hasUUID("matchId")) d.matchId = tag.getUUID("matchId");
         d.dimension = tag.getString("dimension"); d.centerX = tag.getInt("centerX"); d.centerZ = tag.getInt("centerZ");
         d.startMillis = tag.getLong("startMillis"); d.allocationSeed = tag.getLong("allocationSeed");
         d.oldBorderX = tag.getDouble("oldBorderX"); d.oldBorderZ = tag.getDouble("oldBorderZ"); d.oldBorderSize = tag.getDouble("oldBorderSize");
@@ -53,6 +55,7 @@ public final class ExodusSavedData extends SavedData {
 
     @Override public CompoundTag save(CompoundTag tag) {
         tag.putString("state",state.name()); tag.putString("dimension",dimension); tag.putInt("centerX",centerX); tag.putInt("centerZ",centerZ);
+        if (matchId != null) tag.putUUID("matchId", matchId);
         tag.putLong("startMillis",startMillis); tag.putLong("allocationSeed",allocationSeed);
         tag.putDouble("oldBorderX",oldBorderX); tag.putDouble("oldBorderZ",oldBorderZ); tag.putDouble("oldBorderSize",oldBorderSize);
         tag.putDouble("oldDamagePerBlock",oldDamagePerBlock); tag.putDouble("oldSafeZone",oldSafeZone); tag.putInt("oldWarningBlocks",oldWarningBlocks); tag.putInt("oldWarningTime",oldWarningTime);

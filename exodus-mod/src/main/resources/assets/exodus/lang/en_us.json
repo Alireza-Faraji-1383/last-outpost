@@ -1,0 +1,8 @@
+{
+  "block.exodus.basic_supply_radio": "Basic Supply Radio",
+  "block.exodus.special_supply_radio": "Special Supply Radio",
+  "block.exodus.drop_beacon": "Drop Beacon",
+  "block.exodus.supply_crate": "Supply Crate",
+  "item.exodus.linking_tool": "Linking Tool",
+  "entity.exodus.supply_drop": "Supply Drop"
+}

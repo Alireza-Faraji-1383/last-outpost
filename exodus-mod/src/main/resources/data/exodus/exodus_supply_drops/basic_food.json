@@ -1,0 +1,1 @@
+{"display_name":"Basic Food Supplies","icon":"minecraft:bread","loot_table":"exodus:supply_drops/basic_food","radio_types":["basic","special"],"max_requests":3,"cooldown_seconds":30,"cost":{"item":"minecraft:emerald","count":4},"drop":{"smoke_color":"#C47A35"},"enabled":true,"sort_order":10}
