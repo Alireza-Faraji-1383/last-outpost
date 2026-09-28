@@ -1,0 +1,19 @@
+{
+  "display_name": "Optics Materials",
+  "icon": "minecraft:ender_pearl",
+  "loot_table": "exodus:supply_drops/teleporter_optics_materials",
+  "radio_types": [
+    "special"
+  ],
+  "max_requests": 1,
+  "cooldown_seconds": 0,
+  "cost": {
+    "item": "minecraft:copper_ingot",
+    "count": 12
+  },
+  "drop": {
+    "smoke_color": "#22D3EE"
+  },
+  "enabled": true,
+  "sort_order": 31
+}

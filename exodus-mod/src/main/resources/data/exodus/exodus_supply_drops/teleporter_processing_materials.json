@@ -1,0 +1,19 @@
+{
+  "display_name": "Processing Materials",
+  "icon": "minecraft:quartz",
+  "loot_table": "exodus:supply_drops/teleporter_processing_materials",
+  "radio_types": [
+    "special"
+  ],
+  "max_requests": 1,
+  "cooldown_seconds": 0,
+  "cost": {
+    "item": "minecraft:gold_ingot",
+    "count": 8
+  },
+  "drop": {
+    "smoke_color": "#A78BFA"
+  },
+  "enabled": true,
+  "sort_order": 32
+}

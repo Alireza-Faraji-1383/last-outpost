@@ -1,0 +1,19 @@
+{
+  "display_name": "Energy Materials",
+  "icon": "minecraft:blaze_rod",
+  "loot_table": "exodus:supply_drops/teleporter_energy_materials",
+  "radio_types": [
+    "special"
+  ],
+  "max_requests": 1,
+  "cooldown_seconds": 0,
+  "cost": {
+    "item": "minecraft:iron_ingot",
+    "count": 16
+  },
+  "drop": {
+    "smoke_color": "#F97316"
+  },
+  "enabled": true,
+  "sort_order": 30
+}
