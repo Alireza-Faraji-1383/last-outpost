@@ -10,10 +10,15 @@ public final class ExodusConfig {
             RANDOM_CENTER_SEARCH_RADIUS, MAX_PLAYERS, MAX_HEIGHT_VARIATION, CHECKS_PER_TICK,
             STARTING_TIMEOUT_SECONDS, DISCONNECT_GRACE_SECONDS, SPAWN_SEARCH_RADIUS,
             BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z, BASE_STRUCTURE_DEPTH,
+            PREGENERATION_BUFFER, ARENA_SAFETY_GAP, CITY_COVERAGE_MINIMUM_PERCENT,
+            CITY_COVERAGE_SAMPLE_STRIDE_CHUNKS, PREPARATION_CHUNKS_PER_TICK,
+            ABANDONED_CAMPS_MIN, ABANDONED_CAMPS_MAX, OCCUPIED_CAMPS_MIN, OCCUPIED_CAMPS_MAX,
+            CAMP_MIN_DISTANCE, CAMP_PLAYER_BASE_DISTANCE, POI_TERRAIN_MARGIN,
+            RUSSIAN_BASE_Y_OFFSET, AMERICAN_BASE_Y_OFFSET,
             RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
             LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS,
             TELEPORTER_COUNTDOWN_SECONDS, TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS, TELEPORTER_CAPACITY;
-    public static final ForgeConfigSpec.BooleanValue DEV_FALLBACK;
+    public static final ForgeConfigSpec.BooleanValue DEV_FALLBACK, NATURAL_HOSTILE_SPAWNS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> STRUCTURES;
 
     static {
@@ -39,6 +44,23 @@ public final class ExodusConfig {
         BASE_STRUCTURE_DEPTH = b.defineInRange("baseStructureDepth", 6, 0, 128);
         DEV_FALLBACK = b.define("enableDevFallback", false);
         STRUCTURES = b.defineList("starterStructures", List.of("exodus:starter_base"), o -> o instanceof String);
+        b.pop();
+        b.push("wasteland");
+        PREGENERATION_BUFFER = b.defineInRange("pregenerationBuffer", 128, 0, 4096);
+        ARENA_SAFETY_GAP = b.defineInRange("arenaSafetyGap", 1024, 0, 30000);
+        CITY_COVERAGE_MINIMUM_PERCENT = b.defineInRange("cityCoverageMinimumPercent", 15, 0, 100);
+        CITY_COVERAGE_SAMPLE_STRIDE_CHUNKS = b.defineInRange("cityCoverageSampleStrideChunks", 4, 1, 32);
+        PREPARATION_CHUNKS_PER_TICK = b.defineInRange("preparationChunksPerTick", 2, 1, 64);
+        ABANDONED_CAMPS_MIN = b.defineInRange("abandonedCampsMin", 6, 0, 100);
+        ABANDONED_CAMPS_MAX = b.defineInRange("abandonedCampsMax", 10, 0, 100);
+        OCCUPIED_CAMPS_MIN = b.defineInRange("occupiedCampsMin", 3, 0, 100);
+        OCCUPIED_CAMPS_MAX = b.defineInRange("occupiedCampsMax", 5, 0, 100);
+        CAMP_MIN_DISTANCE = b.defineInRange("campMinDistance", 120, 0, 10000);
+        CAMP_PLAYER_BASE_DISTANCE = b.defineInRange("campPlayerBaseDistance", 150, 0, 10000);
+        POI_TERRAIN_MARGIN = b.defineInRange("poiTerrainMargin", 2, 0, 32);
+        RUSSIAN_BASE_Y_OFFSET = b.defineInRange("russianBaseYOffset", 0, -128, 128);
+        AMERICAN_BASE_Y_OFFSET = b.defineInRange("americanBaseYOffset", 0, -128, 128);
+        NATURAL_HOSTILE_SPAWNS = b.define("naturalHostileSpawns", true);
         b.pop();
         b.push("supplyDrops");
         RADIO_LINK_RANGE = b.defineInRange("radioLinkRange", 128, 1, 4096);
