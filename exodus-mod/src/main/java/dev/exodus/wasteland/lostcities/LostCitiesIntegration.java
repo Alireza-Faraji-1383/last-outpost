@@ -13,6 +13,7 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import java.util.function.Function;
 
 public final class LostCitiesIntegration {
+    private static volatile ILostCities api;
     public static final ResourceKey<Level> WASTELAND_DIMENSION = ResourceKey.create(
             Registries.DIMENSION, new ResourceLocation("lostcities", "lostcity"));
 
@@ -27,7 +28,9 @@ public final class LostCitiesIntegration {
         InterModComms.sendTo(ILostCities.LOSTCITIES, ILostCities.GET_LOST_CITIES,
                 () -> (Function<ILostCities, Void>) api -> {
                     api.registerDimension(WASTELAND_DIMENSION, WastelandProfileDefinition.PROFILE_NAME);
+                    LostCitiesIntegration.api = api;
                     return null;
                 });
     }
+    public static java.util.Optional<LostCitiesBridge> bridge(){return java.util.Optional.ofNullable(api).map(LostCitiesApiBridge::new);}
 }
