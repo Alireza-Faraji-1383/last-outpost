@@ -1,0 +1,1 @@
+package dev.exodus.teleporter.domain;public final class ComponentStoragePolicy{private ComponentStoragePolicy(){}public static boolean shouldEject(boolean playerInventory,boolean teleporter){return !playerInventory&&!teleporter;}}

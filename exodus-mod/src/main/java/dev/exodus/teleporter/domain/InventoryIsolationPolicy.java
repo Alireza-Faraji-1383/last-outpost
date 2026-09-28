@@ -1,0 +1,1 @@
+package dev.exodus.teleporter.domain;public final class InventoryIsolationPolicy{public record Result(int removed,int remaining){}private InventoryIsolationPolicy(){}public static Result clear(int main,int armor,int offhand,int ender,int carried){return new Result(Math.max(0,main)+Math.max(0,armor)+Math.max(0,offhand)+Math.max(0,ender)+Math.max(0,carried),0);}}

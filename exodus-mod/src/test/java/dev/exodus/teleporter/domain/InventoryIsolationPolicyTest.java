@@ -1,0 +1,1 @@
+package dev.exodus.teleporter.domain;import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;class InventoryIsolationPolicyTest{@Test void carriedCursorStackIsPartOfPermanentMatchClear(){var result=InventoryIsolationPolicy.clear(36,4,1,27,1);assertEquals(69,result.removed());assertEquals(0,result.remaining());}}
