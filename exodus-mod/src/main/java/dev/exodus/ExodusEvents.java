@@ -8,6 +8,7 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import dev.exodus.supply.catalog.SupplyCatalogReloadListener;
+import dev.exodus.teleporter.item.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public final class ExodusEvents {
@@ -19,4 +20,5 @@ public final class ExodusEvents {
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent e){if(e.getEntity() instanceof ServerPlayer p)MatchManager.login(p);}
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e){if(e.getEntity() instanceof ServerPlayer p)MatchManager.logout(p);}
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e){if(e.getEntity() instanceof ServerPlayer p)MatchManager.dimensionChanged(p,e.getFrom(),e.getTo());}
+    @SubscribeEvent public static void crafted(PlayerEvent.ItemCraftedEvent e){if(e.getEntity() instanceof ServerPlayer p&&e.getCrafting().getItem() instanceof TeleporterComponentItem){if(MatchManager.isActiveMatchPlayer(p))ComponentStacks.bind(e.getCrafting(),ExodusSavedData.get(p.server).matchId);else{e.getCrafting().setCount(0);p.sendSystemMessage(net.minecraft.network.chat.Component.literal("Teleporter components can only be crafted by active match players."));}}}
 }

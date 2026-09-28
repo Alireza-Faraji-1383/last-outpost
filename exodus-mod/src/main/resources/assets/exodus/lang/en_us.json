@@ -4,5 +4,15 @@
   "block.exodus.drop_beacon": "Drop Beacon",
   "block.exodus.supply_crate": "Supply Crate",
   "item.exodus.linking_tool": "Linking Tool",
-  "entity.exodus.supply_drop": "Supply Drop"
+  "entity.exodus.supply_drop": "Supply Drop",
+  "itemGroup.exodus.project_exodus": "Project Exodus",
+  "item.exodus.reinforced_frame": "Reinforced Frame",
+  "item.exodus.power_regulator": "Power Regulator",
+  "item.exodus.phase_coil": "Phase Coil",
+  "item.exodus.facility_alpha_key": "Facility Alpha Key",
+  "item.exodus.dimensional_core": "Dimensional Core",
+  "item.exodus.facility_beta_key": "Facility Beta Key",
+  "item.exodus.signal_processor": "Signal Processor",
+  "item.exodus.spatial_lens": "Spatial Lens",
+  "item.exodus.containment_module": "Containment Module"
 }

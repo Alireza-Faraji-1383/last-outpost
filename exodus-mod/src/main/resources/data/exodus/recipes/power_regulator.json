@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CRC",
+    "RBR",
+    "CRC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:copper_block"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "B": {
+      "item": "minecraft:blaze_rod"
+    }
+  },
+  "result": {
+    "item": "exodus:power_regulator"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RQR",
+    "QCQ",
+    "RQR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "C": {
+      "item": "minecraft:comparator"
+    }
+  },
+  "result": {
+    "item": "exodus:signal_processor"
+  }
+}

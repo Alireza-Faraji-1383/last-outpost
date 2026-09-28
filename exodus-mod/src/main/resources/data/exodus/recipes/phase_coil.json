@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GPG",
+    "PQP",
+    "GPG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "P": {
+      "item": "minecraft:ender_pearl"
+    },
+    "Q": {
+      "item": "minecraft:quartz_block"
+    }
+  },
+  "result": {
+    "item": "exodus:phase_coil"
+  }
+}
