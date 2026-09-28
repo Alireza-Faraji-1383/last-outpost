@@ -3,6 +3,7 @@
   "block.exodus.special_supply_radio": "Special Supply Radio",
   "block.exodus.drop_beacon": "Drop Beacon",
   "block.exodus.supply_crate": "Supply Crate",
+  "block.exodus.exodus_teleporter": "Exodus Teleporter",
   "item.exodus.linking_tool": "Linking Tool",
   "entity.exodus.supply_drop": "Supply Drop",
   "itemGroup.exodus.project_exodus": "Project Exodus",
