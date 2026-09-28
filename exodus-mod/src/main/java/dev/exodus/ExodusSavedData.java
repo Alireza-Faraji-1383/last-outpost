@@ -1,6 +1,7 @@
 package dev.exodus;
 
 import dev.exodus.domain.Association;
+import dev.exodus.teleporter.TeleporterSavedState;
 import net.minecraft.nbt.*;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -23,6 +24,7 @@ public final class ExodusSavedData extends SavedData {
     public final Map<UUID, PlayerBaseData> bases = new HashMap<>();
     public final Map<UUID, Boolean> pendingReturns = new HashMap<>();
     public final List<String> placedCenters = new ArrayList<>();
+    public TeleporterSavedState teleporter = new TeleporterSavedState();
 
     public static ExodusSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(ExodusSavedData::load, ExodusSavedData::new, "exodus");
@@ -50,6 +52,7 @@ public final class ExodusSavedData extends SavedData {
         }
         for(Tag raw:tag.getList("pendingReturns",Tag.TAG_COMPOUND)){var r=(CompoundTag)raw;d.pendingReturns.put(r.getUUID("id"),r.getBoolean("survival"));}
         for(Tag raw:tag.getList("placedCenters",Tag.TAG_STRING)) d.placedCenters.add(raw.getAsString());
+        if(tag.contains("teleporter",Tag.TAG_COMPOUND))d.teleporter=TeleporterSavedState.load(tag.getCompound("teleporter"));
         return d;
     }
 
@@ -63,6 +66,7 @@ public final class ExodusSavedData extends SavedData {
         var baseList=new ListTag(); bases.values().forEach(b->{var t=new CompoundTag();t.putUUID("id",b.uuid());t.putString("name",b.name());putPos(t,"c",b.center());putPos(t,"o",b.origin());putPos(t,"s",b.spawn());t.putString("structure",b.structureId().toString());baseList.add(t);});tag.put("bases",baseList);
         var returns=new ListTag(); pendingReturns.forEach((id,survival)->{var r=new CompoundTag();r.putUUID("id",id);r.putBoolean("survival",survival);returns.add(r);});tag.put("pendingReturns",returns);
         var old=new ListTag(); placedCenters.forEach(s->old.add(StringTag.valueOf(s)));tag.put("placedCenters",old);
+        tag.put("teleporter",teleporter.save());
         return tag;
     }
     private static void putPos(CompoundTag t,String p,net.minecraft.core.BlockPos v){t.putInt(p+"x",v.getX());t.putInt(p+"y",v.getY());t.putInt(p+"z",v.getZ());}

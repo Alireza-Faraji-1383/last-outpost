@@ -11,7 +11,8 @@ public final class ExodusConfig {
             STARTING_TIMEOUT_SECONDS, DISCONNECT_GRACE_SECONDS, SPAWN_SEARCH_RADIUS,
             BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z,
             RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
-            LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS;
+            LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS,
+            TELEPORTER_COUNTDOWN_SECONDS, TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS, TELEPORTER_CAPACITY;
     public static final ForgeConfigSpec.BooleanValue DEV_FALLBACK;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> STRUCTURES;
 
@@ -45,6 +46,11 @@ public final class ExodusConfig {
         LANDING_CLEARANCE = b.defineInRange("landingClearance", 3, 0, 16);
         LANDING_RETRY_SECONDS = b.defineInRange("landingRetrySeconds", 10, 1, 60);
         EMPTY_CRATE_SECONDS = b.defineInRange("emptyCrateRemovalSeconds", 30, 1, 600);
+        b.pop();
+        b.push("teleporter");
+        TELEPORTER_COUNTDOWN_SECONDS=b.defineInRange("teleporterCountdownSeconds",1200,1,86400);
+        TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS=b.defineInRange("teleporterVictoryRadiusMilliblocks",5000,100,64000);
+        TELEPORTER_CAPACITY=b.defineInRange("teleporterCapacity",2,1,8);
         b.pop();
         SPEC = b.build();
     }
