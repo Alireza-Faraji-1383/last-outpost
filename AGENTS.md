@@ -8,7 +8,7 @@ Project Exodus is a Minecraft 1.20.1 Forge minigame foundation. The active game 
 
 Build only the foundation: admin commands, match lifecycle, safe base allocation, structure placement, player/spectator tracking, persistence/recovery, border management, return-to-spawn behavior, status, and logging.
 
-Supply drops are the sole approved exception to this foundation phase, as specified in `docs/superpowers/specs/2026-09-27-project-exodus-supply-drops-design.md`. Do not add rockets, escape/win conditions, other airdrops, NPCs, vehicles, guns, raids, teams, alliances, trading, PvP rules, respawn rules, other loot systems, enemy waves, day/night progression, or unrelated HUD/UI.
+Supply drops and the Exodus Teleporter victory flow are the approved exceptions to this foundation phase, as specified in `docs/superpowers/specs/2026-09-27-project-exodus-supply-drops-design.md` and `docs/superpowers/specs/2026-09-28-project-exodus-teleporter-victory-design.md`. Do not add rockets, other escape/win conditions, other airdrops, NPCs, vehicles, guns, raids, teams, alliances, trading, PvP rules, respawn rules, other loot systems, enemy waves, day/night progression, or unrelated HUD/UI.
 
 ## Agreed behavior
 
@@ -28,6 +28,9 @@ Supply drops are the sole approved exception to this foundation phase, as specif
 - Structures are not deleted on stop. Persist a registry of placed Exodus bases so later matches do not overlap them.
 - On server restart, an active/starting match is not resumed: recover to IDLE, restore the saved border, retain placed structures/base registry, and log clearly.
 - All player-facing text and logs are English.
+- Starting a committed match permanently clears match players' inventory, armor, offhand, and Ender Chest.
+- The Exodus Teleporter uses nine fixed match-bound components, a configurable countdown/radius/capacity, and announces the nearest eligible winners at expiry.
+- The Facility Alpha Key, Facility Beta Key, and Dimensional Core are registered and unique per match; their structure/event distribution remains future content.
 
 ## Engineering rules
 
