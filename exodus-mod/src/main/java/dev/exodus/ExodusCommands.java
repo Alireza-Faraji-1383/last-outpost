@@ -24,6 +24,9 @@ public final class ExodusCommands {
                 .then(Commands.literal("prepare").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();ArenaPreparationService.prepare(c.getSource().getServer(),p.getUUID());return 1;}))
                 .then(Commands.literal("status").executes(c->lines(c,ArenaPreparationService.status(c.getSource().getServer()))))
                 .then(Commands.literal("cancel").executes(c->{boolean cancelled=ArenaPreparationService.cancel(c.getSource().getServer());c.getSource().sendSuccess(()->Component.literal(cancelled?"Arena preparation cancelled.":"No arena preparation is active."),true);return cancelled?1:0;})))
+            .then(Commands.literal("dimension")
+                .then(Commands.literal("enter").executes(c->MatchManager.operatorEnter(c.getSource().getPlayerOrException())))
+                .then(Commands.literal("leave").executes(c->MatchManager.operatorLeave(c.getSource().getPlayerOrException()))))
             .then(Commands.literal("players").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();return lines(c,MatchManager.playerLines(p));})));
     }
     private static int start(CommandContext<CommandSourceStack> c,Integer x,Integer z,boolean random) throws com.mojang.brigadier.exceptions.CommandSyntaxException{return MatchManager.start(c.getSource().getPlayerOrException(),x,z,random);}
