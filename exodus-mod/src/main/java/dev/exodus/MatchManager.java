@@ -21,6 +21,7 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.GameType;
 import org.slf4j.Logger;
+import dev.exodus.teleporter.TeleporterService;
 import com.mojang.logging.LogUtils;
 import java.util.*;
 
@@ -51,13 +52,14 @@ public final class MatchManager {
     }
 
     public static void tick(MinecraftServer server){
+        TeleporterService.tick(server);
         if(job!=null){job.tick(server);return;} ExodusSavedData d=ExodusSavedData.get(server); if(d.state!=MatchState.RUNNING)return;
         long now=server.getTickCount();for(UUID id:new ArrayList<>(d.pendingPlayers.keySet()))if(d.pendingPlayers.get(id)<=now){d.pendingPlayers.remove(id);d.associations.put(id,Association.AUTO_SPECTATOR);log("Grace period expired for "+d.names.getOrDefault(id,id.toString()));}
         boolean any=d.associations.entrySet().stream().anyMatch(e->e.getValue()==Association.MATCH_PLAYER&&(server.getPlayerList().getPlayer(e.getKey())!=null||d.pendingPlayers.containsKey(e.getKey())));
         if(!any)stop(server,"No active players remained after the grace period."); d.setDirty();
     }
 
-    public static int stop(MinecraftServer server,String reason){ExodusSavedData d=ExodusSavedData.get(server);if(d.state==MatchState.IDLE)return 0;if(job!=null){job=null;d.state=MatchState.IDLE;d.matchId=null;d.associations.clear();d.bases.clear();d.setDirty();log("Starting allocation cancelled.");return 1;}d.state=MatchState.ENDING;cleanup(server,d);d.state=MatchState.IDLE;d.matchId=null;d.startMillis=0;d.pendingPlayers.clear();d.associations.clear();d.bases.clear();d.setDirty();log("Match ended: "+reason);return 1;}
+    public static int stop(MinecraftServer server,String reason){ExodusSavedData d=ExodusSavedData.get(server);if(d.state==MatchState.IDLE)return 0;if(job!=null){job=null;d.state=MatchState.IDLE;d.matchId=null;d.associations.clear();d.bases.clear();d.setDirty();log("Starting allocation cancelled.");return 1;}d.state=MatchState.ENDING;TeleporterService.cleanup(server,d.matchId);cleanup(server,d);d.state=MatchState.IDLE;d.matchId=null;d.startMillis=0;d.pendingPlayers.clear();d.associations.clear();d.bases.clear();d.setDirty();log("Match ended: "+reason);return 1;}
     public static void endWithWinners(MinecraftServer server,List<UUID> winners){
         ExodusSavedData d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING)return;
         String names=winners.stream().map(id->d.names.getOrDefault(id,id.toString())).collect(java.util.stream.Collectors.joining(", "));
@@ -72,7 +74,7 @@ public final class MatchManager {
     public static void logout(ServerPlayer p){leaveActive(p);}
     public static void dimensionChanged(ServerPlayer p,ResourceKey<Level> from,ResourceKey<Level> to){ExodusSavedData d=ExodusSavedData.get(p.server);if(d.state!=MatchState.RUNNING)return;String dim=d.dimension;if(from.location().toString().equals(dim)&&!to.location().toString().equals(dim))leaveActive(p);else if(to.location().toString().equals(dim)){if(d.pendingPlayers.remove(p.getUUID())!=null)d.setDirty();else if(d.associations.get(p.getUUID())==Association.AUTO_SPECTATOR){p.setGameMode(GameType.SPECTATOR);d.setDirty();}else if(!d.associations.containsKey(p.getUUID())){d.associations.put(p.getUUID(),Association.AUTO_SPECTATOR);d.names.put(p.getUUID(),p.getGameProfile().getName());p.setGameMode(GameType.SPECTATOR);d.setDirty();}}}
     private static void leaveActive(ServerPlayer p){ExodusSavedData d=ExodusSavedData.get(p.server);if(d.state==MatchState.RUNNING&&d.associations.get(p.getUUID())==Association.MATCH_PLAYER){d.pendingPlayers.put(p.getUUID(),(long)p.server.getTickCount()+ExodusConfig.DISCONNECT_GRACE_SECONDS.get()*20L);d.setDirty();}}
-    public static void recover(MinecraftServer server){ExodusSavedData d=ExodusSavedData.get(server);if(d.state!=MatchState.IDLE){ServerLevel l=level(server,d.dimension);if(l!=null)restoreBorder(l,d);d.state=MatchState.IDLE;d.matchId=null;d.associations.clear();d.pendingPlayers.clear();d.bases.clear();d.setDirty();log("Active match found after restart; recovered to IDLE.");}}
+    public static void recover(MinecraftServer server){ExodusSavedData d=ExodusSavedData.get(server);if(d.state!=MatchState.IDLE){TeleporterService.cleanup(server,d.matchId);ServerLevel l=level(server,d.dimension);if(l!=null)restoreBorder(l,d);d.state=MatchState.IDLE;d.matchId=null;d.associations.clear();d.pendingPlayers.clear();d.bases.clear();d.setDirty();log("Active match found after restart; recovered to IDLE.");}}
     public static boolean isActiveMatchPlayer(ServerPlayer player){ExodusSavedData d=ExodusSavedData.get(player.server);return d.state==MatchState.RUNNING&&d.matchId!=null&&d.associations.get(player.getUUID())==Association.MATCH_PLAYER&&!d.pendingPlayers.containsKey(player.getUUID())&&player.serverLevel().dimension().location().toString().equals(d.dimension);}
     private static ServerLevel level(MinecraftServer s,String id){if(id==null||id.isBlank())return null;return s.getLevel(ResourceKey.create(Registries.DIMENSION,new ResourceLocation(id)));}
     private static void saveBorder(ServerLevel l,ExodusSavedData d){WorldBorder b=l.getWorldBorder();d.oldBorderX=b.getCenterX();d.oldBorderZ=b.getCenterZ();d.oldBorderSize=b.getSize();d.oldDamagePerBlock=b.getDamagePerBlock();d.oldSafeZone=b.getDamageSafeZone();d.oldWarningBlocks=b.getWarningBlocks();d.oldWarningTime=b.getWarningTime();}

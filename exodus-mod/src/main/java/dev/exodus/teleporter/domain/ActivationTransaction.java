@@ -1,0 +1,1 @@
+package dev.exodus.teleporter.domain;public final class ActivationTransaction{public enum Result{INCOMPLETE,ACTIVATED,REJECTED_SECOND_DEVICE}public Result tryActivate(boolean complete,boolean anotherActive){if(!complete)return Result.INCOMPLETE;return anotherActive?Result.REJECTED_SECOND_DEVICE:Result.ACTIVATED;}}

@@ -1,0 +1,1 @@
+package dev.exodus.teleporter.domain;import dev.exodus.domain.Association;public final class BossBarAudiencePolicy{private BossBarAudiencePolicy(){}public static boolean visible(Association association,boolean online){return online&&association!=null;}}
