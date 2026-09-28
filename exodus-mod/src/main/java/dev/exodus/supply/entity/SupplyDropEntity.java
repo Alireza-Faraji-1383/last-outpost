@@ -22,7 +22,10 @@ import dev.exodus.ExodusSavedData;
 
 public class SupplyDropEntity extends Entity {
     private UUID dropId,matchId,requester; private BlockPos radioPos,beaconPos; private String supplyId="",displayName="",lootTable="";private int smokeColor=0xFFFFFF;
-    public SupplyDropEntity(EntityType<? extends SupplyDropEntity> type, Level level) { super(type, level); }
+    public SupplyDropEntity(EntityType<? extends SupplyDropEntity> type, Level level) {
+        super(type, level);
+        setGlowingTag(true);
+    }
     @Override protected void defineSynchedData() {}
     public void configure(UUID drop,UUID match,BlockPos radio,BlockPos beacon,SupplyDefinition d,UUID requester){dropId=drop;matchId=match;radioPos=radio.immutable();beaconPos=beacon.immutable();supplyId=d.id();displayName=d.displayName();lootTable=d.lootTableId();smokeColor=d.smokeColor();this.requester=requester;}
     @Override public void tick(){super.tick();if(level().isClientSide)return;if(!(level() instanceof ServerLevel server)||dropId==null){discard();return;}if(matchId==null||!matchId.equals(ExodusSavedData.get(server.getServer()).matchId)){clearRadio(server);discard();return;}double speed=ExodusConfig.DROP_SPEED_MILLIBLOCKS.get()/1000.0;BlockPos next=BlockPos.containing(getX(),getY()-speed,getZ());server.sendParticles(new DustParticleOptions(new Vector3f(((smokeColor>>16)&255)/255f,((smokeColor>>8)&255)/255f,(smokeColor&255)/255f),1f),getX(),getY(),getZ(),2,.15,.05,.15,0);if(!server.getBlockState(next.below()).getCollisionShape(server,next.below()).isEmpty()&&server.getBlockState(next).canBeReplaced()){server.setBlock(next,ExodusSupplyRegistry.SUPPLY_CRATE.get().defaultBlockState(),3);if(server.getBlockEntity(next) instanceof SupplyCrateBlockEntity crate)crate.configure(displayName,new ResourceLocation(lootTable),requester);clearRadio(server);discard();return;}setPos(getX(),getY()-speed,getZ());if(getY()<server.getMinBuildHeight()){clearRadio(server);discard();}}
