@@ -5,7 +5,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BasePlacementPolicyTest {
-    private final BasePlacementPolicy policy = new BasePlacementPolicy(1000, 100, 250, 6);
+    private final BasePlacementPolicy policy = new BasePlacementPolicy(1000, 100, 250, 6, 13, 14);
 
     @Test void acceptsCandidateInsideSafeBorderWithFlatTerrain() {
         var candidate = new BaseCandidate(800, 70, 0, 4, false, true);
@@ -13,7 +13,9 @@ class BasePlacementPolicyTest {
     }
 
     @Test void rejectsCandidateWhoseFootprintCrossesSafeBorder() {
-        var candidate = new BaseCandidate(890, 70, 0, 1, false, true);
+        var candidate = new BaseCandidate(887, 70, 0, 1, false, true);
+        assertTrue(policy.isValid(candidate, 0, 0, List.of(), List.of()));
+        candidate = new BaseCandidate(887, 70, 887, 1, false, true);
         assertFalse(policy.isValid(candidate, 0, 0, List.of(), List.of()));
     }
 

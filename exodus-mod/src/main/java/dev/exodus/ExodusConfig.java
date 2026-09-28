@@ -9,7 +9,7 @@ public final class ExodusConfig {
             BORDER_SAFE_DISTANCE, MAX_LOCATION_ATTEMPTS, MAX_ALLOCATION_ROUNDS, MAX_RANDOM_CENTER_ATTEMPTS,
             RANDOM_CENTER_SEARCH_RADIUS, MAX_PLAYERS, MAX_HEIGHT_VARIATION, CHECKS_PER_TICK,
             STARTING_TIMEOUT_SECONDS, DISCONNECT_GRACE_SECONDS, SPAWN_SEARCH_RADIUS,
-            BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z,
+            BASE_PLAYER_OFFSET_X, BASE_PLAYER_OFFSET_Y, BASE_PLAYER_OFFSET_Z, BASE_STRUCTURE_DEPTH,
             RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
             LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS,
             TELEPORTER_COUNTDOWN_SECONDS, TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS, TELEPORTER_CAPACITY;
@@ -36,6 +36,7 @@ public final class ExodusConfig {
         BASE_PLAYER_OFFSET_X = b.defineInRange("basePlayerOffsetX", 0, -128, 128);
         BASE_PLAYER_OFFSET_Y = b.defineInRange("basePlayerOffsetY", 2, -64, 128);
         BASE_PLAYER_OFFSET_Z = b.defineInRange("basePlayerOffsetZ", 0, -128, 128);
+        BASE_STRUCTURE_DEPTH = b.defineInRange("baseStructureDepth", 6, 0, 128);
         DEV_FALLBACK = b.define("enableDevFallback", false);
         STRUCTURES = b.defineList("starterStructures", List.of("exodus:starter_base"), o -> o instanceof String);
         b.pop();
