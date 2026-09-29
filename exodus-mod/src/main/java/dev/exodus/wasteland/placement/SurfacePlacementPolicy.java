@@ -16,9 +16,11 @@ public final class SurfacePlacementPolicy {
 
         int required = (int) Math.ceil(totalColumns * quorumPercent / 100.0);
         Candidate selected = supports.stream().distinct()
-                .map(y -> new Candidate(y, countWithin(supports, y, tolerance), y >= preferredMinY && y <= preferredMaxY))
+                .map(y -> new Candidate(y, countWithin(supports, y, tolerance), countExact(supports, y),
+                        y >= preferredMinY && y <= preferredMaxY))
                 .filter(candidate -> candidate.count() >= required)
                 .max(Comparator.comparingInt(Candidate::count)
+                        .thenComparingInt(Candidate::exactCount)
                         .thenComparing(Candidate::preferred)
                         .thenComparingInt(Candidate::y))
                 .orElseThrow(() -> new IllegalStateException("No surface height satisfies the configured quorum"));
@@ -32,7 +34,11 @@ public final class SurfacePlacementPolicy {
         return (int) supports.stream().filter(y -> Math.abs((long) y - candidateY) <= tolerance).count();
     }
 
-    private record Candidate(int y, int count, boolean preferred) {}
+    private static int countExact(List<Integer> supports, int candidateY) {
+        return (int) supports.stream().filter(y -> y == candidateY).count();
+    }
+
+    private record Candidate(int y, int count, int exactCount, boolean preferred) {}
 
     public record Selection(int platformY, int quorumCount, int totalColumns,
                             int minimumSupportY, int maximumSupportY) {

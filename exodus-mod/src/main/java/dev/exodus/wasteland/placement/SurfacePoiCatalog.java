@@ -23,8 +23,9 @@ public final class SurfacePoiCatalog {
                     result.add(composite(entries, entry.kind(), nation, offset));
                 }
             } else {
-                result.add(new SurfacePoi(entry.placementId(), entry.kind(), entry.x(), entry.z(),
-                        entry.width(), entry.depth(), 11, 0, List.of(entry)));
+                PlacementBounds bounds = PlacementBounds.from(entry);
+                result.add(new SurfacePoi(entry.placementId(), entry.kind(), bounds.minX(), bounds.minZ(),
+                        bounds.width(), bounds.depth(), 11, 0, List.of(entry)));
             }
         }
         return List.copyOf(result);

@@ -26,7 +26,7 @@ class TerrainColumnPolicyTest {
     @Test
     void foundationStopsAtFirstSolidAndHonorsDepthLimit() {
         var column = List.of(TerrainColumnPolicy.StateKind.AIR, TerrainColumnPolicy.StateKind.FLUID,
-                TerrainColumnPolicy.StateKind.AIR, TerrainColumnPolicy.StateKind.AIR,
+                TerrainColumnPolicy.StateKind.LEAVES, TerrainColumnPolicy.StateKind.REPLACEABLE,
                 TerrainColumnPolicy.StateKind.SOLID);
         assertEquals(4, TerrainColumnPolicy.fillCountKinds(column, 96));
         assertThrows(IllegalStateException.class, () -> TerrainColumnPolicy.fillCountKinds(

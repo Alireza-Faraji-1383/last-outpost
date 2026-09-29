@@ -32,7 +32,7 @@ class ArenaRegistryTest {
         assertFalse(restored.verified);
     }
 
-    @Test void legacySaveWithoutPoiStatesRestartsRequiredPoiPreparation(){
+    @Test void legacySaveAfterTerrainMutationFailsSafely(){
         ArenaRegistry registry=new ArenaRegistry();
         ArenaRecord arena=registry.begin(UUID.randomUUID(),0,4096,0,2000,128);
         arena.checkpoint().phase=ArenaPhase.TERRAIN_PREPARATION;
@@ -42,10 +42,28 @@ class ArenaRegistryTest {
 
         ArenaRecord restored=ArenaRegistry.load(legacy).records().get(0);
 
-        assertTrue(restored.checkpoint().poiStates.isEmpty());
-        assertEquals(ArenaPhase.POI_CHUNK_PREPARATION,restored.checkpoint().phase);
-        assertTrue(restored.checkpoint().placementY.isEmpty());
-        assertTrue(restored.checkpoint().placementNeedsRevalidation);
+        assertEquals(ArenaState.FAILED,restored.state());
+        assertTrue(restored.failure().contains("legacy"));
+    }
+
+    @Test void preparingSaveReconcilesCompletedMutationsForRevalidation(){
+        ArenaRegistry registry=new ArenaRegistry();
+        ArenaRecord arena=registry.begin(UUID.randomUUID(),0,4096,0,2000,128);
+        PoiPreparationState placed=new PoiPreparationState();
+        placed.chunkCursor=9;placed.totalChunks=9;placed.chunksComplete=true;placed.surfaceSelected=true;
+        placed.platformY=64;placed.terrainPrepared=true;placed.structurePlaced=true;placed.verified=true;
+        placed.geometrySignature="camp@10,20:11x16:NONE";
+        arena.checkpoint().poiStates.put("camp",placed);
+        PoiPreparationState terrainOnly=new PoiPreparationState();
+        terrainOnly.chunkCursor=9;terrainOnly.totalChunks=9;terrainOnly.chunksComplete=true;terrainOnly.surfaceSelected=true;
+        terrainOnly.platformY=64;terrainOnly.terrainPrepared=true;terrainOnly.geometrySignature="camp2@40,20:11x16:NONE";
+        arena.checkpoint().poiStates.put("camp2",terrainOnly);
+
+        ArenaRecord restored=ArenaRegistry.load(registry.save()).records().get(0);
+
+        assertFalse(restored.checkpoint().poiStates.get("camp").verified);
+        assertTrue(restored.checkpoint().poiStates.get("camp").structurePlaced);
+        assertFalse(restored.checkpoint().poiStates.get("camp2").terrainPrepared);
     }
 
     @Test void enforcesSinglePreparationAndReadyArena(){

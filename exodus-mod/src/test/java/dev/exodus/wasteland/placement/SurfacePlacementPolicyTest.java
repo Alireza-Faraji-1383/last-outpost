@@ -23,6 +23,15 @@ class SurfacePlacementPolicyTest {
     }
 
     @Test
+    void rejectsNeighboringHeightSingletonInsideToleranceBand() {
+        var supports = new ArrayList<Integer>();
+        supports.addAll(Collections.nCopies(99, 64));
+        supports.add(65);
+        var result = SurfacePlacementPolicy.select(supports, 100, 50, 2, 55, 70);
+        assertEquals(64, result.platformY());
+    }
+
+    @Test
     void choosesGreaterHeightWhenItHasStrongerSupport() {
         var supports = new ArrayList<Integer>();
         supports.addAll(Collections.nCopies(50, 62));

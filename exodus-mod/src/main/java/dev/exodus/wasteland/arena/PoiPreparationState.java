@@ -3,6 +3,7 @@ package dev.exodus.wasteland.arena;
 public final class PoiPreparationState {
     public int chunkCursor;
     public int totalChunks;
+    public String geometrySignature = "";
     public boolean chunksComplete;
     public boolean surfaceSelected;
     public int platformY;

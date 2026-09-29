@@ -34,6 +34,20 @@ class SurfacePoiCatalogTest {
     }
 
     @Test
+    void usesTransformedBoundsForClockwiseCampWithoutMovingItsOrigin() {
+        var entry = new PlacementPlan.Entry("occupied_camp_0", "exodus:occupied_camp_01",
+                PlacementPlan.Kind.OCCUPIED_CAMP, 100, 200, 11, 16,
+                PlacementPlan.Rotation.CLOCKWISE_90, true);
+        var camp = SurfacePoiCatalog.from(List.of(entry), 0, 0).get(0);
+        assertEquals(85, camp.x());
+        assertEquals(200, camp.z());
+        assertEquals(16, camp.width());
+        assertEquals(11, camp.depth());
+        assertEquals(100, camp.parts().get(0).x());
+        assertEquals(200, camp.parts().get(0).z());
+    }
+
+    @Test
     void appliesOneConfiguredYOffsetToWholeFactionComposite() {
         var russian = SurfacePoiCatalog.from(russianParts(), -3, 4).get(0);
         assertEquals(-3, russian.yOffset());

@@ -15,6 +15,7 @@ import dev.exodus.wasteland.placement.TerrainPreparationService;
 import dev.exodus.wasteland.placement.FootprintChunkPlan;
 import dev.exodus.wasteland.placement.SurfacePoi;
 import dev.exodus.wasteland.placement.SurfacePoiCatalog;
+import dev.exodus.wasteland.placement.PlacementBounds;
 import dev.exodus.wasteland.loot.LootMarkerProcessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -175,6 +176,7 @@ public final class ArenaPreparationService {
         for (SurfacePoi poi : surfacePois(arena)) {
             FootprintChunkPlan chunks = FootprintChunkPlan.forBounds(poi.x(), poi.z(), poi.maxX(), poi.maxZ(), 1);
             PoiPreparationState state = arena.checkpoint().poiStates.computeIfAbsent(poi.id(), ignored -> new PoiPreparationState());
+            PoiPreparationWorkflow.bindGeometry(state, poi.geometrySignature());
             if (state.totalChunks == 0) state.totalChunks = chunks.total();
             if (state.totalChunks != chunks.total()) throw new IllegalStateException("POI " + poi.id() + " persisted chunk plan no longer matches its footprint");
             PoiPreparationWorkflow.Action action = PoiPreparationWorkflow.next(state, chunks.total());
@@ -248,8 +250,9 @@ public final class ArenaPreparationService {
             String id = "markers@" + entry.placementId();
             if (arena.checkpoint().completedPlacements.contains(id)) continue;
             int y = arena.checkpoint().placementY.get(entry.placementId());
-            LootMarkerProcessor.process(level, new net.minecraft.core.BlockPos(entry.x(), y, entry.z()),
-                    new net.minecraft.core.BlockPos(entry.maxX(), y + height(entry) - 1, entry.maxZ()),
+            PlacementBounds bounds = PlacementBounds.from(entry);
+            LootMarkerProcessor.process(level, new net.minecraft.core.BlockPos(bounds.minX(), y, bounds.minZ()),
+                    new net.minecraft.core.BlockPos(bounds.maxX(), y + height(entry) - 1, bounds.maxZ()),
                     arena.id().getLeastSignificantBits(), arena.checkpoint().completedPlacements, entry.placementId());
             arena.checkpoint().completedPlacements.add(id);
             return;

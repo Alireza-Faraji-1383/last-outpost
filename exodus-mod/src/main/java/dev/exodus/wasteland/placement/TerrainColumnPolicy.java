@@ -18,7 +18,7 @@ public final class TerrainColumnPolicy {
     }
 
     public static boolean needsFoundation(BlockState state) {
-        return state.isAir() || !state.getFluidState().isEmpty();
+        return !isSurfaceSupport(state);
     }
 
     public static int fillCount(List<BlockState> statesFromTopDown, int maximumDepth) {
@@ -30,7 +30,7 @@ public final class TerrainColumnPolicy {
         int limit = Math.min(statesFromTopDown.size(), maximumDepth);
         for (int depth = 0; depth < limit; depth++) {
             StateKind kind = statesFromTopDown.get(depth);
-            if (kind != StateKind.AIR && kind != StateKind.FLUID) return depth;
+            if (kind == StateKind.SOLID) return depth;
         }
         throw new IllegalStateException("No foundation support found within " + maximumDepth + " blocks");
     }

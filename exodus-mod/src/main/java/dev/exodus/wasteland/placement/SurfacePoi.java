@@ -14,4 +14,15 @@ public record SurfacePoi(String id, PlacementPlan.Kind kind,
 
     public int maxX() { return Math.addExact(x, width - 1); }
     public int maxZ() { return Math.addExact(z, depth - 1); }
+
+    public String geometrySignature() {
+        StringBuilder value = new StringBuilder(id).append('|').append(kind).append('|')
+                .append(x).append(',').append(z).append('|').append(width).append('x').append(depth)
+                .append('x').append(height).append('|').append(yOffset);
+        for (PlacementPlan.Entry part : parts) {
+            value.append('|').append(part.placementId()).append('@').append(part.x()).append(',').append(part.z())
+                    .append(':').append(part.width()).append('x').append(part.depth()).append(':').append(part.rotation());
+        }
+        return value.toString();
+    }
 }

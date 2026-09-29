@@ -25,7 +25,7 @@ public final class BasePlacementPolicy {
         int limitX = radius - borderSafeDistance - halfFootprintX;
         int limitZ = radius - borderSafeDistance - halfFootprintZ;
         if (Math.abs(candidate.x() - centerX) > limitX || Math.abs(candidate.z() - centerZ) > limitZ) return false;
-        if (candidate.hasLiquid() || !candidate.solidSurface() || candidate.heightVariation() > maximumHeightVariation) return false;
+        if (!candidate.overheadClear()) return false;
         return farEnough(candidate, currentBases) && farEnough(candidate, persistedBases);
     }
 

@@ -26,6 +26,11 @@ class ExodusSavedDataTest {
         arena.checkpoint().placementNeedsRevalidation=true;
         arena.checkpoint().completedPlacements.add("russian_base:part_1");
         arena.checkpoint().placementY.put("russian_base_1", 64);
+        PoiPreparationState poi=new PoiPreparationState();
+        poi.chunkCursor=49;poi.totalChunks=49;poi.geometrySignature="russian_base@0,0:57x60:NONE";
+        poi.chunksComplete=true;poi.surfaceSelected=true;poi.platformY=64;poi.terrainPrepared=true;
+        poi.structurePlaced=true;poi.verified=true;
+        arena.checkpoint().poiStates.put("russian_base",poi);
 
         ExodusSavedData loaded=ExodusSavedData.load(original.save(new CompoundTag()));
         ArenaRecord restored=loaded.arenas.active().orElseThrow();
@@ -40,8 +45,9 @@ class ExodusSavedDataTest {
         assertEquals(100,restored.checkpoint().citySamples);
         assertEquals(44,restored.checkpoint().cityChunks);
         assertEquals(60,restored.checkpoint().lastAnnouncedPercent);
-        assertTrue(restored.checkpoint().placementNeedsRevalidation);
+        assertFalse(restored.checkpoint().placementNeedsRevalidation);
         assertEquals(java.util.Set.of("russian_base:part_1"),restored.checkpoint().completedPlacements);
         assertEquals(java.util.Map.of("russian_base_1",64),restored.checkpoint().placementY);
+        assertFalse(restored.checkpoint().poiStates.get("russian_base").verified);
     }
 }

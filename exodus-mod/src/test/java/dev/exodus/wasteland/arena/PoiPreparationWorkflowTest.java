@@ -38,6 +38,15 @@ class PoiPreparationWorkflowTest {
         assertThrows(IllegalStateException.class,()->PoiPreparationWorkflow.next(prematureComplete,9));
         var placementWithoutTerrain=selectedSurface(64,9);placementWithoutTerrain.structurePlaced=true;
         assertThrows(IllegalStateException.class,()->PoiPreparationWorkflow.next(placementWithoutTerrain,9));
+        var surfaceBeforeChunks=new PoiPreparationState();surfaceBeforeChunks.surfaceSelected=true;surfaceBeforeChunks.platformY=64;
+        assertThrows(IllegalStateException.class,()->PoiPreparationWorkflow.next(surfaceBeforeChunks,9));
+    }
+
+    @Test void bindsPersistedGeometryAndRejectsChangedLayout(){
+        var state=new PoiPreparationState();
+        PoiPreparationWorkflow.bindGeometry(state,"camp@10,20:11x16:NONE");
+        assertEquals("camp@10,20:11x16:NONE",state.geometrySignature);
+        assertThrows(IllegalStateException.class,()->PoiPreparationWorkflow.bindGeometry(state,"camp@30,40:16x11:CLOCKWISE_90"));
     }
 
     private static PoiPreparationState selectedSurface(int y,int chunks){

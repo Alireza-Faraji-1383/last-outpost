@@ -1,11 +1,14 @@
 package dev.exodus;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.*;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.level.ServerPlayer;
 import dev.exodus.wasteland.arena.ArenaPreparationService;
 
@@ -23,6 +26,10 @@ public final class ExodusCommands {
             .then(Commands.literal("arena")
                 .then(Commands.literal("prepare").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();ArenaPreparationService.prepare(c.getSource().getServer(),p.getUUID());return 1;}))
                 .then(Commands.literal("status").executes(c->lines(c,ArenaPreparationService.status(c.getSource().getServer()))))
+                .then(Commands.literal("locations").executes(ExodusCommands::arenaLocations))
+                .then(Commands.literal("tp").then(Commands.argument("placementId",StringArgumentType.word())
+                    .suggests((c,b)->SharedSuggestionProvider.suggest(ArenaPreparationService.locationIds(c.getSource().getServer()),b))
+                    .executes(ExodusCommands::arenaTeleport)))
                 .then(Commands.literal("cancel").executes(c->{boolean cancelled=ArenaPreparationService.cancel(c.getSource().getServer());c.getSource().sendSuccess(()->Component.literal(cancelled?"Arena preparation cancelled.":"No arena preparation is active."),true);return cancelled?1:0;})))
             .then(Commands.literal("dimension")
                 .then(Commands.literal("enter").executes(c->MatchManager.operatorEnter(c.getSource().getPlayerOrException())))
@@ -30,5 +37,7 @@ public final class ExodusCommands {
             .then(Commands.literal("players").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();return lines(c,MatchManager.playerLines(p));})));
     }
     private static int start(CommandContext<CommandSourceStack> c,Integer x,Integer z,boolean random) throws com.mojang.brigadier.exceptions.CommandSyntaxException{return MatchManager.start(c.getSource().getPlayerOrException(),x,z,random);}
+    private static int arenaLocations(CommandContext<CommandSourceStack> c){var locations=ArenaPreparationService.locations(c.getSource().getServer());if(locations.isEmpty()){c.getSource().sendFailure(Component.literal("No finalized Exodus structure locations are available."));return 0;}for(var location:locations){String command="/exodus arena tp "+location.placementId();Component line=Component.literal(location.placementId()+" ["+location.kind()+"] X "+location.x()+" Y "+location.y()+" Z "+location.z()+" ").append(Component.literal("[TP]").withStyle(style->style.withColor(net.minecraft.ChatFormatting.AQUA).withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,command)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,Component.literal("Teleport to "+location.placementId())))));c.getSource().sendSuccess(()->line,false);}return locations.size();}
+    private static int arenaTeleport(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException{String id=StringArgumentType.getString(c,"placementId");var location=ArenaPreparationService.location(c.getSource().getServer(),id).orElse(null);if(location==null){c.getSource().sendFailure(Component.literal("Unknown or unavailable Exodus structure location: "+id));return 0;}ServerPlayer player=c.getSource().getPlayerOrException();int result=MatchManager.operatorTeleport(player,location.x(),location.teleportY(),location.z());if(result==1)c.getSource().sendSuccess(()->Component.literal("Teleported to "+id+"."),false);return result;}
     private static int lines(CommandContext<CommandSourceStack> c,java.util.List<String> lines){for(String line:lines)c.getSource().sendSuccess(()->Component.literal(line),false);return 1;}
 }

@@ -5,12 +5,24 @@ public final class PoiPreparationWorkflow {
 
     private PoiPreparationWorkflow() {}
 
+    public static void bindGeometry(PoiPreparationState state, String signature) {
+        if (signature == null || signature.isBlank()) throw new IllegalArgumentException("POI geometry signature cannot be blank");
+        if (state.geometrySignature.isBlank()) {
+            state.geometrySignature = signature;
+        } else if (!state.geometrySignature.equals(signature)) {
+            throw new IllegalStateException("Persisted POI geometry no longer matches the arena layout");
+        }
+    }
+
     public static Action next(PoiPreparationState state, int totalChunks) {
         if (totalChunks <= 0 || state.chunkCursor < 0 || state.chunkCursor > totalChunks) {
             throw new IllegalStateException("Invalid POI chunk progress");
         }
         if (state.chunksComplete && state.chunkCursor != totalChunks) {
             throw new IllegalStateException("POI chunks marked complete before cursor completion");
+        }
+        if (state.surfaceSelected && (!state.chunksComplete || state.chunkCursor != totalChunks)) {
+            throw new IllegalStateException("POI surface was selected before required chunks completed");
         }
         if ((state.terrainPrepared || state.structurePlaced || state.verified) && !state.surfaceSelected) {
             throw new IllegalStateException("POI progress depends on an unselected surface");

@@ -1,6 +1,7 @@
 package dev.exodus.wasteland.arena;
 
 import dev.exodus.wasteland.placement.PlacementPlan;
+import dev.exodus.wasteland.placement.PlacementBounds;
 import java.util.LinkedHashMap;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +24,9 @@ public final class ArenaLocationCatalog {
                 case RUSSIAN_BASE, AMERICAN_BASE -> 20;
                 case ABANDONED_CAMP, OCCUPIED_CAMP -> 11;
             };
+            PlacementBounds bounds = PlacementBounds.from(entry);
             locations.put(entry.placementId(), new ArenaLocation(entry.placementId(), entry.kind(),
-                    entry.x() + entry.width() / 2, y, entry.z() + entry.depth() / 2, y + height + 2));
+                    bounds.centerX(), y, bounds.centerZ(), y + height + 2));
         }
         return new ArenaLocationCatalog(locations);
     }

@@ -40,6 +40,16 @@ class ArenaLocationCatalogTest {
         assertTrue(catalog.find("russian_base").isEmpty());
     }
 
+    @Test void usesTransformedCenterForRotatedCamp() {
+        var camp = new PlacementPlan.Entry("occupied_camp_0", "exodus:occupied_camp_01",
+                PlacementPlan.Kind.OCCUPIED_CAMP, 100, 200, 11, 16,
+                PlacementPlan.Rotation.CLOCKWISE_90, true);
+        var location = ArenaLocationCatalog.from(List.of(camp), Map.of("occupied_camp_0", 64))
+                .find("occupied_camp_0").orElseThrow();
+        assertEquals(93, location.x());
+        assertEquals(205, location.z());
+    }
+
     private static PlacementPlan.Entry entry(String id, PlacementPlan.Kind kind, int x, int z, int width, int depth) {
         return new PlacementPlan.Entry(id, "exodus:" + id, kind, x, z, width, depth,
                 PlacementPlan.Rotation.NONE, true);
