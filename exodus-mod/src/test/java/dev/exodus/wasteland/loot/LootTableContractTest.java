@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LootTableContractTest {
     private static final Set<String> MARKERS=Set.of("general/common","general/standard","general/valuable","general/elite","food","weapons","medical","utility","tech");
-    private static final Set<String> BONUSES=Set.of("bonus/survival","bonus/blocks","bonus/weapons_common","bonus/weapons_valuable","bonus/weapons_elite","bonus/components_common","bonus/components_standard","bonus/components_valuable","bonus/components_elite");
+    private static final Set<String> BONUSES=Set.of("bonus/survival","bonus/blocks","bonus/ammunition","bonus/weapons_common","bonus/weapons_valuable","bonus/weapons_elite","bonus/components_common","bonus/components_standard","bonus/components_valuable","bonus/components_elite");
     private static final Set<String> COMPONENTS=Set.of("exodus:reinforced_frame","exodus:power_regulator","exodus:phase_coil","exodus:signal_processor","exodus:spatial_lens","exodus:containment_module");
 
     @Test void everyOrdinaryTableParsesAndExcludesRareComponents()throws Exception{
@@ -28,6 +28,17 @@ class LootTableContractTest {
     }
 
     @Test void allMarkerFamiliesReferenceCraftableComponents()throws Exception{for(String name:MARKERS)assertTrue(table(name).toString().contains("bonus/components_"),name);}
+
+    @Test void generalTiersReachTechAndFavorAmmunitionOverGuns()throws Exception{
+        assertTrue(table("bonus/survival").toString().contains("exodus:chests/tech"));
+        assertTrue(table("bonus/ammunition").toString().contains("tacz:ammo"));
+        for(String tier:new String[]{"common","standard","valuable","elite"}){
+            JsonArray pools=table("general/"+tier).getAsJsonArray("pools");
+            float ammunitionChance=chanceForReference(pools,"exodus:chests/bonus/ammunition");
+            float gunChance=chanceForReference(pools,"exodus:chests/bonus/weapons_");
+            assertTrue(ammunitionChance>gunChance,tier+" ammunition="+ammunitionChance+" guns="+gunChance);
+        }
+    }
 
     @Test void weaponsIncludeMultiplePistolsSmgsRiflesShotgunsAndPrecisionRifles()throws Exception{
         String weapons=table("weapons")+table("bonus/weapons_common").toString()+table("bonus/weapons_valuable")+table("bonus/weapons_elite");
@@ -50,5 +61,6 @@ class LootTableContractTest {
     private static JsonObject table(String name)throws Exception{return JsonParser.parseString(resource("/data/exodus/loot_tables/chests/"+name+".json")).getAsJsonObject();}
     private static String resource(String path)throws Exception{try(var stream=LootTableContractTest.class.getResourceAsStream(path)){assertNotNull(stream,path);return new String(stream.readAllBytes(),StandardCharsets.UTF_8);}}
     private static void assertAtLeast(String json,int minimum,String...ids){long found=Arrays.stream(ids).filter(json::contains).count();assertTrue(found>=minimum,"expected at least "+minimum+" of "+Arrays.toString(ids));}
+    private static float chanceForReference(JsonArray pools,String referencePrefix){for(JsonElement rawPool:pools){JsonObject pool=rawPool.getAsJsonObject();for(JsonElement rawEntry:pool.getAsJsonArray("entries")){String name=rawEntry.getAsJsonObject().get("name").getAsString();if(name.startsWith(referencePrefix)){if(!pool.has("conditions"))return 1.0F;return pool.getAsJsonArray("conditions").get(0).getAsJsonObject().get("chance").getAsFloat();}}}fail("missing loot reference "+referencePrefix);return 0;}
     private static int weightFor(String json,String item){int total=0,cursor=0;while((cursor=json.indexOf("\"name\":\""+item+"\"",cursor))>=0){int at=json.indexOf("\"weight\":",cursor),start=at+9,end=start;while(Character.isDigit(json.charAt(end)))end++;total+=Integer.parseInt(json.substring(start,end));cursor=end;}return total;}
 }
