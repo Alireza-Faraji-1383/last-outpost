@@ -15,6 +15,9 @@ public final class ExodusConfig {
             ABANDONED_CAMPS_MIN, ABANDONED_CAMPS_MAX, OCCUPIED_CAMPS_MIN, OCCUPIED_CAMPS_MAX,
             CAMP_MIN_DISTANCE, CAMP_PLAYER_BASE_DISTANCE, POI_TERRAIN_MARGIN,
             RUSSIAN_BASE_Y_OFFSET, AMERICAN_BASE_Y_OFFSET,
+            SURFACE_QUORUM_PERCENT, SURFACE_HEIGHT_TOLERANCE,
+            PREFERRED_SURFACE_MIN_Y, PREFERRED_SURFACE_MAX_Y,
+            MAX_FOUNDATION_DEPTH, POI_CHUNKS_PER_TICK,
             RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
             LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS,
             TELEPORTER_COUNTDOWN_SECONDS, TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS, TELEPORTER_CAPACITY;
@@ -50,7 +53,8 @@ public final class ExodusConfig {
         ARENA_SAFETY_GAP = b.defineInRange("arenaSafetyGap", 1024, 0, 30000);
         CITY_COVERAGE_MINIMUM_PERCENT = b.defineInRange("cityCoverageMinimumPercent", 15, 0, 100);
         CITY_COVERAGE_SAMPLE_STRIDE_CHUNKS = b.defineInRange("cityCoverageSampleStrideChunks", 4, 1, 32);
-        PREPARATION_CHUNKS_PER_TICK = b.defineInRange("preparationChunksPerTick", 2, 1, 64);
+        PREPARATION_CHUNKS_PER_TICK = b.comment("Set to 0 to skip arena pregeneration and generate chunks during play instead.")
+                .defineInRange("preparationChunksPerTick", 2, 0, 64);
         ABANDONED_CAMPS_MIN = b.defineInRange("abandonedCampsMin", 6, 0, 100);
         ABANDONED_CAMPS_MAX = b.defineInRange("abandonedCampsMax", 10, 0, 100);
         OCCUPIED_CAMPS_MIN = b.defineInRange("occupiedCampsMin", 3, 0, 100);
@@ -60,6 +64,12 @@ public final class ExodusConfig {
         POI_TERRAIN_MARGIN = b.defineInRange("poiTerrainMargin", 2, 0, 32);
         RUSSIAN_BASE_Y_OFFSET = b.defineInRange("russianBaseYOffset", 0, -128, 128);
         AMERICAN_BASE_Y_OFFSET = b.defineInRange("americanBaseYOffset", 0, -128, 128);
+        SURFACE_QUORUM_PERCENT = b.defineInRange("surfaceQuorumPercent", 50, 1, 100);
+        SURFACE_HEIGHT_TOLERANCE = b.defineInRange("surfaceHeightTolerance", 2, 0, 32);
+        PREFERRED_SURFACE_MIN_Y = b.defineInRange("preferredSurfaceMinY", 55, -64, 319);
+        PREFERRED_SURFACE_MAX_Y = b.defineInRange("preferredSurfaceMaxY", 70, -64, 319);
+        MAX_FOUNDATION_DEPTH = b.defineInRange("maxFoundationDepth", 96, 1, 384);
+        POI_CHUNKS_PER_TICK = b.defineInRange("poiChunksPerTick", 2, 1, 64);
         NATURAL_HOSTILE_SPAWNS = b.define("naturalHostileSpawns", true);
         b.pop();
         b.push("supplyDrops");
