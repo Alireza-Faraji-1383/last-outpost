@@ -7,6 +7,18 @@ import dev.exodus.wasteland.arena.*;
 import java.util.UUID;
 
 class ExodusSavedDataTest {
+    @Test void pendingOfflineReturnRoundTripsExactlyOnce(){
+        ExodusSavedData original=new ExodusSavedData();
+        UUID player=UUID.randomUUID();
+        original.pendingReturns.put(player,true);
+
+        ExodusSavedData loaded=ExodusSavedData.load(original.save(new CompoundTag()));
+
+        assertEquals(1,loaded.pendingReturns.size());
+        assertEquals(Boolean.TRUE,loaded.pendingReturns.remove(player));
+        assertTrue(loaded.pendingReturns.isEmpty());
+    }
+
     @Test void oldSaveWithoutTeleporterFieldsLoadsEmptyState(){
         ExodusSavedData data=ExodusSavedData.load(new CompoundTag());
         assertNull(data.teleporter.active());
