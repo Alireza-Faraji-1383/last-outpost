@@ -33,6 +33,19 @@ class StructureAssetContractTest {
                 "occupied_camp_01 must be saved with entities enabled");
     }
 
+    @Test
+    void eachFactionPartOneContainsTwoEliteMarkers() throws Exception {
+        assertTrue(countMetadata(read("russian_base_1"), "exodus:loot/general/elite") == 2);
+        assertTrue(countMetadata(read("american_base_1"), "exodus:loot/general/elite") == 2);
+    }
+
+    private static long countMetadata(CompoundTag structure, String metadata) {
+        return structure.getList("blocks", Tag.TAG_COMPOUND).stream()
+                .map(tag -> ((CompoundTag) tag).getCompound("nbt"))
+                .filter(tag -> metadata.equals(tag.getString("metadata")))
+                .count();
+    }
+
     private static void assertSize(String id, int x, int y, int z) throws Exception {
         assertArrayEquals(new int[]{x, y, z}, read(id).getList("size", Tag.TAG_INT).stream()
                 .mapToInt(tag -> ((net.minecraft.nbt.IntTag) tag).getAsInt()).toArray(), id);

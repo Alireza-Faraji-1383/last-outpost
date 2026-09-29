@@ -175,7 +175,7 @@ public final class ArenaPreparationService {
             int y = arena.checkpoint().placementY.get(entry.placementId());
             LootMarkerProcessor.process(level, new net.minecraft.core.BlockPos(entry.x(), y, entry.z()),
                     new net.minecraft.core.BlockPos(entry.maxX(), y + height(entry) - 1, entry.maxZ()),
-                    arena.id().getLeastSignificantBits(), arena.checkpoint().completedPlacements);
+                    arena.id().getLeastSignificantBits(), arena.checkpoint().completedPlacements, entry.placementId());
             arena.checkpoint().completedPlacements.add(id);
             return;
         }

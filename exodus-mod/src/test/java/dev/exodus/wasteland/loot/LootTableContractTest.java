@@ -45,6 +45,25 @@ class LootTableContractTest {
         }
     }
 
+    @Test void factionTablesKeepEliteLootAndContainOnlyTheirOwnGuaranteedKey() throws Exception {
+        String russian = resource("/data/exodus/loot_tables/chests/faction/russian_key.json");
+        String american = resource("/data/exodus/loot_tables/chests/faction/american_key.json");
+
+        assertTrue(russian.contains("exodus:chests/general/elite"));
+        assertTrue(russian.contains("exodus:facility_alpha_key"));
+        assertFalse(russian.contains("exodus:facility_beta_key"));
+        assertTrue(american.contains("exodus:chests/general/elite"));
+        assertTrue(american.contains("exodus:facility_beta_key"));
+        assertFalse(american.contains("exodus:facility_alpha_key"));
+    }
+
+    private static String resource(String path) throws Exception {
+        try (var stream = LootTableContractTest.class.getResourceAsStream(path)) {
+            assertNotNull(stream, path);
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
     private static int weightFor(String json, String item) {
         int total = 0, cursor = 0;
         while ((cursor = json.indexOf("\"name\":\"" + item + "\"", cursor)) >= 0) {
