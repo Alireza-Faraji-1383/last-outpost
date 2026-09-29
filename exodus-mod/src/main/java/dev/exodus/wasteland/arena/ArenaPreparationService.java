@@ -12,6 +12,9 @@ import dev.exodus.wasteland.placement.PlacementPlan;
 import dev.exodus.wasteland.placement.PlacementPolicy;
 import dev.exodus.wasteland.placement.TemplatePlacementService;
 import dev.exodus.wasteland.placement.TerrainPreparationService;
+import dev.exodus.wasteland.placement.FootprintChunkPlan;
+import dev.exodus.wasteland.placement.SurfacePoi;
+import dev.exodus.wasteland.placement.SurfacePoiCatalog;
 import dev.exodus.wasteland.loot.LootMarkerProcessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,17 +41,40 @@ public final class ArenaPreparationService {
 
     public static boolean cancel(MinecraftServer server) {
         ExodusSavedData data = ExodusSavedData.get(server);
-        var active = data.arenas.active();
-        if (active.isEmpty()) return false;
-        data.arenas.cancel(active.get().id());
+        ArenaRecord arena = data.arenas.active().orElseGet(() -> data.arenas.readyArena().orElse(null));
+        if (arena == null) return false;
+        data.arenas.cancel(arena.id());
         data.setDirty();
-        announce(server, active.get(), "Arena preparation cancelled. Generated chunks and placed blocks were retained.");
+        announce(server, arena, "Arena abandoned. Generated chunks and placed blocks were retained.");
         return true;
     }
 
     public static List<String> status(MinecraftServer server) {
         List<ArenaRecord> records = ExodusSavedData.get(server).arenas.records();
         return records.isEmpty() ? List.of("No Exodus arena has been prepared.") : ArenaStatusFormatter.format(records.get(records.size() - 1));
+    }
+
+    public static List<ArenaLocation> locations(MinecraftServer server) {
+        return locationCatalog(server).locations();
+    }
+
+    public static List<String> locationIds(MinecraftServer server) {
+        return locationCatalog(server).ids();
+    }
+
+    public static java.util.Optional<ArenaLocation> location(MinecraftServer server, String placementId) {
+        return locationCatalog(server).find(placementId);
+    }
+
+    private static ArenaLocationCatalog locationCatalog(MinecraftServer server) {
+        List<ArenaRecord> records = ExodusSavedData.get(server).arenas.records();
+        for (int i = records.size() - 1; i >= 0; i--) {
+            ArenaRecord arena = records.get(i);
+            if (!arena.checkpoint().placementY.isEmpty()) {
+                return ArenaLocationCatalog.from(placements(arena), arena.checkpoint().placementY);
+            }
+        }
+        return ArenaLocationCatalog.from(List.of(), java.util.Map.of());
     }
 
     public static void tick(MinecraftServer server) {
@@ -66,9 +92,8 @@ public final class ArenaPreparationService {
                 case CITY_SAMPLING -> sampleCity(level, arena);
                 case TEMPLATE_VALIDATION -> validateTemplates(level, arena);
                 case PREGENERATION -> pregenerate(level, arena, server);
-                case POI_PLANNING -> arena.checkpoint().phase = ArenaPhase.TERRAIN_PREPARATION;
-                case TERRAIN_PREPARATION -> prepareTerrain(level, arena);
-                case STRUCTURE_PLACEMENT -> placeStructure(level, arena);
+                case POI_PLANNING -> arena.checkpoint().phase = ArenaPhase.POI_CHUNK_PREPARATION;
+                case POI_CHUNK_PREPARATION, TERRAIN_PREPARATION, STRUCTURE_PLACEMENT, POI_VERIFICATION -> advancePoi(level, arena, server);
                 case MARKER_PROCESSING -> processMarkers(level, arena);
                 case FINAL_VALIDATION -> {
                     data.arenas.ready(arena.id());
@@ -125,10 +150,16 @@ public final class ArenaPreparationService {
     }
 
     private static void pregenerate(ServerLevel level, ArenaRecord arena, MinecraftServer server) {
+        int chunksPerTick = ExodusConfig.PREPARATION_CHUNKS_PER_TICK.get();
+        if (!PregenerationPolicy.enabled(chunksPerTick)) {
+            arena.checkpoint().phase = ArenaPhase.POI_PLANNING;
+            announce(server, arena, "Arena pregeneration skipped by configuration; chunks will generate during play.");
+            return;
+        }
         ArenaGeometry geometry = ArenaGeometry.of(arena.arenaSize(), arena.buffer(), ExodusConfig.ARENA_SAFETY_GAP.get());
         ChunkPreparationCursor cursor = ChunkPreparationCursor.forArea(arena.centerX(), arena.centerZ(), geometry.generationSize(), arena.checkpoint().chunkCursor);
         int old = cursor.index();
-        for (int count = 0; count < ExodusConfig.PREPARATION_CHUNKS_PER_TICK.get() && !cursor.complete(); count++) {
+        for (int count = 0; count < chunksPerTick && !cursor.complete(); count++) {
             level.getChunk(cursor.chunkX(), cursor.chunkZ(), net.minecraft.world.level.chunk.ChunkStatus.FULL, true);
             cursor = cursor.advance();
         }
@@ -140,29 +171,73 @@ public final class ArenaPreparationService {
         if (cursor.complete()) arena.checkpoint().phase = ArenaPhase.POI_PLANNING;
     }
 
-    private static void prepareTerrain(ServerLevel level, ArenaRecord arena) {
-        if (arena.checkpoint().placementY.isEmpty()) {
-            for (PlacementPlan.Entry entry : placements(arena)) {
-                arena.checkpoint().placementY.put(entry.placementId(), placementY(level, entry));
+    private static void advancePoi(ServerLevel level, ArenaRecord arena, MinecraftServer server) {
+        for (SurfacePoi poi : surfacePois(arena)) {
+            FootprintChunkPlan chunks = FootprintChunkPlan.forBounds(poi.x(), poi.z(), poi.maxX(), poi.maxZ(), 1);
+            PoiPreparationState state = arena.checkpoint().poiStates.computeIfAbsent(poi.id(), ignored -> new PoiPreparationState());
+            if (state.totalChunks == 0) state.totalChunks = chunks.total();
+            if (state.totalChunks != chunks.total()) throw new IllegalStateException("POI " + poi.id() + " persisted chunk plan no longer matches its footprint");
+            PoiPreparationWorkflow.Action action = PoiPreparationWorkflow.next(state, chunks.total());
+            if (action == PoiPreparationWorkflow.Action.DONE) continue;
+            switch (action) {
+                case GENERATE_CHUNK -> {
+                    arena.checkpoint().phase = ArenaPhase.POI_CHUNK_PREPARATION;
+                    for (int count = 0; count < ExodusConfig.POI_CHUNKS_PER_TICK.get() && state.chunkCursor < chunks.total(); count++) {
+                        level.getChunk(chunks.chunkX(state.chunkCursor), chunks.chunkZ(state.chunkCursor),
+                                net.minecraft.world.level.chunk.ChunkStatus.FULL, true);
+                        state.chunkCursor++;
+                    }
+                    state.chunksComplete = state.chunkCursor == chunks.total();
+                }
+                case SELECT_SURFACE -> {
+                    arena.checkpoint().phase = ArenaPhase.TERRAIN_PREPARATION;
+                    var sample = TerrainPreparationService.sample(level, poi, ExodusConfig.SURFACE_QUORUM_PERCENT.get(),
+                            ExodusConfig.SURFACE_HEIGHT_TOLERANCE.get(), ExodusConfig.PREFERRED_SURFACE_MIN_Y.get(),
+                            ExodusConfig.PREFERRED_SURFACE_MAX_Y.get());
+                    state.platformY = sample.selection().platformY();
+                    state.quorumCount = sample.selection().quorumCount();
+                    state.totalColumns = sample.selection().totalColumns();
+                    state.validSamples = sample.validSamples();
+                    state.unsupportedSamples = sample.unsupportedSamples();
+                    state.minimumSupportY = sample.selection().minimumSupportY();
+                    state.maximumSupportY = sample.selection().maximumSupportY();
+                    state.surfaceSelected = true;
+                    poi.parts().forEach(part -> arena.checkpoint().placementY.put(part.placementId(), state.platformY));
+                    announce(server, arena, "POI " + poi.id() + " surface selected: size=" + poi.width() + "x" + poi.depth()
+                            + " chunks=" + chunks.minimumChunkX() + "," + chunks.minimumChunkZ() + ".." + chunks.maximumChunkX() + "," + chunks.maximumChunkZ()
+                            + " samples=" + state.validSamples + " unsupported=" + state.unsupportedSamples
+                            + " range=" + state.minimumSupportY + ".." + state.maximumSupportY + " y=" + state.platformY
+                            + " quorum=" + state.quorumCount + "/" + state.totalColumns + ".");
+                }
+                case PREPARE_TERRAIN -> {
+                    arena.checkpoint().phase = ArenaPhase.TERRAIN_PREPARATION;
+                    var report = TerrainPreparationService.prepare(level, poi, state.platformY,
+                            ExodusConfig.POI_TERRAIN_MARGIN.get(), ExodusConfig.MAX_FOUNDATION_DEPTH.get());
+                    state.clearedBlocks = report.clearedBlocks();
+                    state.foundationBlocks = report.foundationBlocks();
+                    state.deepestFill = report.deepestFill();
+                    state.terrainPrepared = true;
+                    announce(server, arena, "POI " + poi.id() + " terrain prepared: cleared=" + state.clearedBlocks
+                            + " foundation=" + state.foundationBlocks + " deepestFill=" + state.deepestFill + ".");
+                }
+                case PLACE_STRUCTURE -> {
+                    arena.checkpoint().phase = ArenaPhase.STRUCTURE_PLACEMENT;
+                    for (PlacementPlan.Entry part : poi.parts()) {
+                        TemplatePlacementService.placeOnce(level, part,
+                                new net.minecraft.core.BlockPos(part.x(), state.platformY, part.z()),
+                                arena.id().getMostSignificantBits(), arena.checkpoint().completedPlacements);
+                    }
+                    state.structurePlaced = poi.parts().stream()
+                            .allMatch(part -> arena.checkpoint().completedPlacements.contains(part.placementId()));
+                }
+                case VERIFY -> {
+                    arena.checkpoint().phase = ArenaPhase.POI_VERIFICATION;
+                    TerrainPreparationService.verify(level, poi, state.platformY, ExodusConfig.MAX_FOUNDATION_DEPTH.get());
+                    state.verified = true;
+                    announce(server, arena, "POI " + poi.id() + " placement verified at Y=" + state.platformY + ".");
+                }
+                case DONE -> throw new IllegalStateException("Unexpected completed POI workflow action");
             }
-        }
-        for (PlacementPlan.Entry entry : placements(arena)) {
-            String id = "terrain@" + entry.placementId();
-            if (arena.checkpoint().completedPlacements.contains(id)) continue;
-            int y = arena.checkpoint().placementY.get(entry.placementId());
-            TerrainPreparationService.prepare(level, entry, y, height(entry), ExodusConfig.POI_TERRAIN_MARGIN.get());
-            arena.checkpoint().completedPlacements.add(id);
-            return;
-        }
-        arena.checkpoint().phase = ArenaPhase.STRUCTURE_PLACEMENT;
-    }
-
-    private static void placeStructure(ServerLevel level, ArenaRecord arena) {
-        for (PlacementPlan.Entry entry : placements(arena)) {
-            if (arena.checkpoint().completedPlacements.contains(entry.placementId())) continue;
-            int y = arena.checkpoint().placementY.get(entry.placementId());
-            TemplatePlacementService.placeOnce(level, entry, new net.minecraft.core.BlockPos(entry.x(), y, entry.z()),
-                    arena.id().getMostSignificantBits(), arena.checkpoint().completedPlacements);
             return;
         }
         arena.checkpoint().phase = ArenaPhase.MARKER_PROCESSING;
@@ -198,6 +273,11 @@ public final class ArenaPreparationService {
         return entries;
     }
 
+    private static List<SurfacePoi> surfacePois(ArenaRecord arena) {
+        return SurfacePoiCatalog.from(placements(arena), ExodusConfig.RUSSIAN_BASE_Y_OFFSET.get(),
+                ExodusConfig.AMERICAN_BASE_Y_OFFSET.get());
+    }
+
     private static void addFaction(List<PlacementPlan.Entry> entries, String nation, int x, int z) {
         CompositeDefinition definition = CompositeDefinition.faction(nation);
         PlacementPlan.Kind kind = nation.equals("russian") ? PlacementPlan.Kind.RUSSIAN_BASE : PlacementPlan.Kind.AMERICAN_BASE;
@@ -214,19 +294,6 @@ public final class ArenaPreparationService {
     private static int randomInclusive(java.util.Random random, int minimum, int maximum) {
         if (maximum < minimum) throw new IllegalStateException("Camp maximum cannot be smaller than minimum");
         return minimum + random.nextInt(maximum - minimum + 1);
-    }
-
-    private static int placementY(ServerLevel level, PlacementPlan.Entry entry) {
-        if (entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP) {
-            return TerrainPreparationService.surfaceY(level, entry);
-        }
-        int anchorX = entry.x() - (entry.placementId().endsWith("_2") || entry.placementId().endsWith("_4") ? 29 : 0);
-        int anchorZ = entry.z() - (entry.placementId().endsWith("_3") || entry.placementId().endsWith("_4") ? 30 : 0);
-        PlacementPlan.Entry combined = new PlacementPlan.Entry("combined", "", entry.kind(), anchorX, anchorZ,
-                57, 60, PlacementPlan.Rotation.NONE, true);
-        int offset = entry.kind() == PlacementPlan.Kind.RUSSIAN_BASE
-                ? ExodusConfig.RUSSIAN_BASE_Y_OFFSET.get() : ExodusConfig.AMERICAN_BASE_Y_OFFSET.get();
-        return TerrainPreparationService.surfaceY(level, combined) + offset;
     }
 
     private static List<String> append(List<String> source, String value) { var copy = new ArrayList<>(source); copy.add(value); return copy; }
