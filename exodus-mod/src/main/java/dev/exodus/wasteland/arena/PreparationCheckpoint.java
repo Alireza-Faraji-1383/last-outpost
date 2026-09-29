@@ -14,4 +14,5 @@ public final class PreparationCheckpoint {
     public boolean placementNeedsRevalidation;
     public final Set<String> completedPlacements = new LinkedHashSet<>();
     public final Map<String, Integer> placementY = new LinkedHashMap<>();
+    public final Map<String, PoiPreparationState> poiStates = new LinkedHashMap<>();
 }
