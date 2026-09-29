@@ -38,4 +38,13 @@ class TerrainColumnPolicyTest {
         assertThrows(IllegalArgumentException.class,
                 () -> TerrainColumnPolicy.fillCountKinds(List.of(TerrainColumnPolicy.StateKind.SOLID), 0));
     }
+
+    @Test
+    void fallsBackToOceanFloorBelowDeepWater() {
+        int supportY = TerrainColumnPolicy.findSurfaceSupportY(
+                y -> y == 50 ? TerrainColumnPolicy.StateKind.SOLID : TerrainColumnPolicy.StateKind.FLUID,
+                64, 50, -64, 8);
+
+        assertEquals(50, supportY);
+    }
 }

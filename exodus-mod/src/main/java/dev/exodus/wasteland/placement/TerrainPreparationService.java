@@ -20,10 +20,19 @@ public final class TerrainPreparationService {
         int totalColumns = Math.multiplyExact(poi.width(), poi.depth());
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
+                int columnX = x;
+                int columnZ = z;
                 int firstCandidate = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
-                Integer support = findSurfaceSupport(level, cursor, x, z, firstCandidate);
+                int oceanFloorCandidate = level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z) - 1;
+                Integer support = TerrainColumnPolicy.findSurfaceSupportY(
+                        y -> TerrainColumnPolicy.classify(level.getBlockState(cursor.set(columnX, y, columnZ))),
+                        firstCandidate, oceanFloorCandidate, level.getMinBuildHeight(), SURFACE_SCAN_DEPTH);
                 if (support != null) supports.add(support);
             }
+        }
+        if (supports.isEmpty()) {
+            throw new IllegalStateException("POI " + poi.id() + " found no solid surface support across "
+                    + totalColumns + " footprint columns");
         }
         SurfacePlacementPolicy.Selection raw = SurfacePlacementPolicy.select(supports, totalColumns,
                 quorumPercent, tolerance, preferredMinY, preferredMaxY);
@@ -110,16 +119,6 @@ public final class TerrainPreparationService {
     private static int height(PlacementPlan.Entry entry) {
         return entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP
                 || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 20;
-    }
-
-    private static Integer findSurfaceSupport(ServerLevel level, BlockPos.MutableBlockPos cursor,
-                                              int x, int z, int firstCandidate) {
-        for (int depth = 0; depth <= SURFACE_SCAN_DEPTH; depth++) {
-            int y = firstCandidate - depth;
-            if (y < level.getMinBuildHeight()) return null;
-            if (TerrainColumnPolicy.isSurfaceSupport(level.getBlockState(cursor.set(x, y, z)))) return y;
-        }
-        return null;
     }
 
     private static int foundationDepth(ServerLevel level, BlockPos.MutableBlockPos cursor, String poiId,

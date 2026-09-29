@@ -1,6 +1,7 @@
 package dev.exodus.wasteland.placement;
 
 import java.util.List;
+import java.util.function.IntFunction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -35,7 +36,26 @@ public final class TerrainColumnPolicy {
         throw new IllegalStateException("No foundation support found within " + maximumDepth + " blocks");
     }
 
-    private static StateKind classify(BlockState state) {
+    public static Integer findSurfaceSupportY(IntFunction<StateKind> states, int primaryY,
+                                               int oceanFloorY, int minimumY, int scanDepth) {
+        if (states == null) throw new IllegalArgumentException("Surface state source cannot be null");
+        if (scanDepth < 0) throw new IllegalArgumentException("Surface scan depth cannot be negative");
+        Integer primary = scanForSupport(states, primaryY, minimumY, scanDepth);
+        if (primary != null || oceanFloorY == primaryY) return primary;
+        return scanForSupport(states, oceanFloorY, minimumY, scanDepth);
+    }
+
+    private static Integer scanForSupport(IntFunction<StateKind> states, int startY,
+                                          int minimumY, int scanDepth) {
+        for (int depth = 0; depth <= scanDepth; depth++) {
+            int y = startY - depth;
+            if (y < minimumY) return null;
+            if (isSurfaceSupport(states.apply(y))) return y;
+        }
+        return null;
+    }
+
+    static StateKind classify(BlockState state) {
         if (state.isAir()) return StateKind.AIR;
         if (!state.getFluidState().isEmpty()) return StateKind.FLUID;
         if (state.is(BlockTags.LEAVES)) return StateKind.LEAVES;
