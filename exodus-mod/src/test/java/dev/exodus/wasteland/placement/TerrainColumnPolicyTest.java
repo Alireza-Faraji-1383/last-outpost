@@ -40,11 +40,11 @@ class TerrainColumnPolicyTest {
     }
 
     @Test
-    void fallsBackToOceanFloorBelowDeepWater() {
+    void placesPlatformOneBlockAboveDeepWaterSurface() {
         int supportY = TerrainColumnPolicy.findSurfaceSupportY(
                 y -> y == 50 ? TerrainColumnPolicy.StateKind.SOLID : TerrainColumnPolicy.StateKind.FLUID,
                 64, 50, -64, 8);
 
-        assertEquals(50, supportY);
+        assertEquals(65, supportY);
     }
 }

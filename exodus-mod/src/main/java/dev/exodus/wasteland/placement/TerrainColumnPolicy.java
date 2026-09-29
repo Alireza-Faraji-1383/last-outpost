@@ -40,6 +40,9 @@ public final class TerrainColumnPolicy {
                                                int oceanFloorY, int minimumY, int scanDepth) {
         if (states == null) throw new IllegalArgumentException("Surface state source cannot be null");
         if (scanDepth < 0) throw new IllegalArgumentException("Surface scan depth cannot be negative");
+        if (primaryY >= minimumY && states.apply(primaryY) == StateKind.FLUID) {
+            return Math.addExact(primaryY, 1);
+        }
         Integer primary = scanForSupport(states, primaryY, minimumY, scanDepth);
         if (primary != null || oceanFloorY == primaryY) return primary;
         return scanForSupport(states, oceanFloorY, minimumY, scanDepth);
