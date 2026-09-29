@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $minecraftRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $builder = Join-Path $PSScriptRoot "build-curseforge-pack.ps1"
-$output = Join-Path $minecraftRoot "dist\Project-Exodus-0.1.0-CurseForge.zip"
+$output = Join-Path $minecraftRoot "dist\Project-Exodus-0.2.0-CurseForge.zip"
 
 if (-not (Test-Path -LiteralPath $builder)) {
     throw "Missing CurseForge pack builder: $builder"
@@ -33,7 +33,7 @@ if ($manifest.minecraft.modLoaders[0].id -ne "forge-47.4.10" -or -not $manifest.
     throw "Unexpected Forge loader."
 }
 $expectedPublicMods = @(Get-ChildItem -LiteralPath (Join-Path $minecraftRoot "mods") -File -Filter "*.jar" |
-    Where-Object { $_.Name -notin @("exodus-0.1.0.jar", "jei-1.20.1-forge-15.56.0.205.jar") })
+    Where-Object { $_.Name -notin @("exodus-0.2.0.jar", "jei-1.20.1-forge-15.56.0.205.jar") })
 if (@($manifest.files).Count -ne $expectedPublicMods.Count) {
     throw "Expected $($expectedPublicMods.Count) CurseForge file references, found $(@($manifest.files).Count)."
 }
@@ -49,8 +49,8 @@ if ($lostCities.Count -ne 1) {
 }
 
 $overrideMods = @(Get-ChildItem -LiteralPath (Join-Path $verificationRoot "overrides\mods") -File -Filter "*.jar")
-if ($overrideMods.Count -ne 1 -or $overrideMods[0].Name -ne "exodus-0.1.0.jar") {
-    throw "Only exodus-0.1.0.jar may be bundled in overrides/mods."
+if ($overrideMods.Count -ne 1 -or $overrideMods[0].Name -ne "exodus-0.2.0.jar") {
+    throw "Only exodus-0.2.0.jar may be bundled in overrides/mods."
 }
 if (@($overrideMods | Where-Object Name -Match "lostcities").Count -ne 0) {
     throw "Lost Cities must be a public CurseForge reference, not a bundled override."
