@@ -5,7 +5,8 @@ import mcjty.lostcities.api.ILostCityProfileSetup;
 
 public final class WastelandProfileDefinition {
     public static final String PROFILE_NAME = "exodus";
-    public static final String BASE_PROFILE = "rarecities";
+    public static final String BASE_PROFILE = "wasteland";
+    public static final String LANDSCAPE_TYPE = "default";
 
     private WastelandProfileDefinition() {}
 

@@ -8,13 +8,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class WastelandProfileDefinitionTest {
     @Test
+    void usesWastelandWithDefaultLandscape() {
+        assertEquals("wasteland", WastelandProfileDefinition.BASE_PROFILE);
+        assertEquals("default", WastelandProfileDefinition.LANDSCAPE_TYPE);
+    }
+
+    @Test
     void registersMediumRuinedExodusProfileFromRareCities() {
         RecordingSetup setup = new RecordingSetup();
 
         WastelandProfileDefinition.register(setup);
 
         assertEquals("exodus", setup.profileName);
-        assertEquals("rarecities", setup.baseProfile);
+        assertEquals("wasteland", setup.baseProfile);
         assertEquals("Project Exodus: medium-ruined competitive wasteland", setup.profile.description);
         assertEquals(0.01, setup.profile.cityChance);
         assertEquals(0.65f, setup.profile.ruinChance);
