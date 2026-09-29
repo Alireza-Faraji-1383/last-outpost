@@ -6,13 +6,6 @@ import java.util.List;
 public final class SurfacePlacementPolicy {
     private SurfacePlacementPolicy() {}
 
-    public static int baseY(int minimumSurfaceY, int maximumSurfaceY) {
-        if (maximumSurfaceY < minimumSurfaceY) {
-            throw new IllegalArgumentException("Maximum surface height cannot be below minimum surface height");
-        }
-        return maximumSurfaceY;
-    }
-
     public static Selection select(List<Integer> supports, int totalColumns, int quorumPercent,
                                    int tolerance, int preferredMinY, int preferredMaxY) {
         if (supports == null || supports.isEmpty()) throw new IllegalArgumentException("Surface supports cannot be empty");
