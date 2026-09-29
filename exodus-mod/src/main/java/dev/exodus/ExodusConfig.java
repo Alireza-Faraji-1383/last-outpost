@@ -43,7 +43,7 @@ public final class ExodusConfig {
         BASE_PLAYER_OFFSET_Z = b.defineInRange("basePlayerOffsetZ", 0, -128, 128);
         BASE_STRUCTURE_DEPTH = b.defineInRange("baseStructureDepth", 6, 0, 128);
         DEV_FALLBACK = b.define("enableDevFallback", false);
-        STRUCTURES = b.defineList("starterStructures", List.of("exodus:starter_base"), o -> o instanceof String);
+        STRUCTURES = b.defineList("starterStructures", List.of("exodus:starter_base", "exodus:starter_base_2"), o -> o instanceof String);
         b.pop();
         b.push("wasteland");
         PREGENERATION_BUFFER = b.defineInRange("pregenerationBuffer", 128, 0, 4096);

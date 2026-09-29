@@ -25,6 +25,7 @@ class ExodusSavedDataTest {
         arena.checkpoint().lastAnnouncedPercent=60;
         arena.checkpoint().placementNeedsRevalidation=true;
         arena.checkpoint().completedPlacements.add("russian_base:part_1");
+        arena.checkpoint().placementY.put("russian_base_1", 64);
 
         ExodusSavedData loaded=ExodusSavedData.load(original.save(new CompoundTag()));
         ArenaRecord restored=loaded.arenas.active().orElseThrow();
@@ -41,5 +42,6 @@ class ExodusSavedDataTest {
         assertEquals(60,restored.checkpoint().lastAnnouncedPercent);
         assertTrue(restored.checkpoint().placementNeedsRevalidation);
         assertEquals(java.util.Set.of("russian_base:part_1"),restored.checkpoint().completedPlacements);
+        assertEquals(java.util.Map.of("russian_base_1",64),restored.checkpoint().placementY);
     }
 }

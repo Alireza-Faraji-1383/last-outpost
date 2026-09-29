@@ -29,6 +29,7 @@ $curseForgeFiles = @(
     @{ name = "kotlinforforge-4.12.0-all.jar"; fingerprint = 2392977662; projectID = 351264; fileID = 7291067 }
     @{ name = "kubejs-forge-2001.6.5-build.26.jar"; fingerprint = 2994552797; projectID = 238086; fileID = 8020595 }
     @{ name = "lanserverproperties-1.11.1-forge.jar"; fingerprint = 3682653448; projectID = 387365; fileID = 4776657 }
+    @{ name = "lostcities-1.20-7.5.5.jar"; fingerprint = 1128582096; projectID = 269024; fileID = 8862717 }
     @{ name = "lrarmor-1.20.1-0.1.4.4.jar"; fingerprint = 3071182315; projectID = 1021131; fileID = 7343690 }
     @{ name = "lrtactical-1.20.1-0.4.3.jar"; fingerprint = 3473687940; projectID = 1273094; fileID = 8652673 }
     @{ name = "mezz_config-1.20.1-forge-0.6.5.jar"; fingerprint = 1448958754; projectID = 1689768; fileID = 8987763 }
@@ -123,7 +124,7 @@ foreach ($mod in $publicMods) {
     }
     $actualFingerprint = [uint64][CurseForgePackFingerprint]::Compute($mod.FullName)
     if ($actualFingerprint -ne [uint64]$mapping.fingerprint) {
-        throw "CurseForge fingerprint changed for $($mod.Name)."
+        throw "CurseForge fingerprint changed for $($mod.Name): expected $($mapping.fingerprint), actual $actualFingerprint."
     }
 }
 

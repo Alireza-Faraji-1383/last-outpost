@@ -43,9 +43,17 @@ if ($duplicates.Count -ne 0) {
     throw "The manifest contains duplicate CurseForge projects."
 }
 
+$lostCities = @($manifest.files | Where-Object { $_.projectID -eq 269024 -and $_.fileID -eq 8862717 -and $_.required })
+if ($lostCities.Count -ne 1) {
+    throw "The manifest must contain exactly one required Lost Cities 1.20-7.5.5 reference."
+}
+
 $overrideMods = @(Get-ChildItem -LiteralPath (Join-Path $verificationRoot "overrides\mods") -File -Filter "*.jar")
 if ($overrideMods.Count -ne 1 -or $overrideMods[0].Name -ne "exodus-0.1.0.jar") {
     throw "Only exodus-0.1.0.jar may be bundled in overrides/mods."
+}
+if (@($overrideMods | Where-Object Name -Match "lostcities").Count -ne 0) {
+    throw "Lost Cities must be a public CurseForge reference, not a bundled override."
 }
 
 if (Test-Path -LiteralPath (Join-Path $verificationRoot "overrides\mods\jei-1.20.1-forge-15.56.0.205.jar")) {

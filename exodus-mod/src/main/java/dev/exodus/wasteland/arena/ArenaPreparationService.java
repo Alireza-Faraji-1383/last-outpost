@@ -141,10 +141,15 @@ public final class ArenaPreparationService {
     }
 
     private static void prepareTerrain(ServerLevel level, ArenaRecord arena) {
+        if (arena.checkpoint().placementY.isEmpty()) {
+            for (PlacementPlan.Entry entry : placements(arena)) {
+                arena.checkpoint().placementY.put(entry.placementId(), placementY(level, entry));
+            }
+        }
         for (PlacementPlan.Entry entry : placements(arena)) {
             String id = "terrain@" + entry.placementId();
             if (arena.checkpoint().completedPlacements.contains(id)) continue;
-            int y = placementY(level, entry);
+            int y = arena.checkpoint().placementY.get(entry.placementId());
             TerrainPreparationService.prepare(level, entry, y, height(entry), ExodusConfig.POI_TERRAIN_MARGIN.get());
             arena.checkpoint().completedPlacements.add(id);
             return;
@@ -155,7 +160,7 @@ public final class ArenaPreparationService {
     private static void placeStructure(ServerLevel level, ArenaRecord arena) {
         for (PlacementPlan.Entry entry : placements(arena)) {
             if (arena.checkpoint().completedPlacements.contains(entry.placementId())) continue;
-            int y = placementY(level, entry);
+            int y = arena.checkpoint().placementY.get(entry.placementId());
             TemplatePlacementService.placeOnce(level, entry, new net.minecraft.core.BlockPos(entry.x(), y, entry.z()),
                     arena.id().getMostSignificantBits(), arena.checkpoint().completedPlacements);
             return;
@@ -167,7 +172,7 @@ public final class ArenaPreparationService {
         for (PlacementPlan.Entry entry : placements(arena)) {
             String id = "markers@" + entry.placementId();
             if (arena.checkpoint().completedPlacements.contains(id)) continue;
-            int y = placementY(level, entry);
+            int y = arena.checkpoint().placementY.get(entry.placementId());
             LootMarkerProcessor.process(level, new net.minecraft.core.BlockPos(entry.x(), y, entry.z()),
                     new net.minecraft.core.BlockPos(entry.maxX(), y + height(entry) - 1, entry.maxZ()),
                     arena.id().getLeastSignificantBits(), arena.checkpoint().completedPlacements);
@@ -182,8 +187,9 @@ public final class ArenaPreparationService {
         List<PlacementPlan.Entry> entries = new ArrayList<>();
         addFaction(entries, "russian", cx - quarter - 28, cz - 30);
         addFaction(entries, "american", cx + quarter - 28, cz - 30);
-        int abandoned = ExodusConfig.ABANDONED_CAMPS_MIN.get();
-        int occupied = ExodusConfig.OCCUPIED_CAMPS_MIN.get();
+        java.util.Random counts = new java.util.Random(arena.id().getLeastSignificantBits());
+        int abandoned = randomInclusive(counts, ExodusConfig.ABANDONED_CAMPS_MIN.get(), ExodusConfig.ABANDONED_CAMPS_MAX.get());
+        int occupied = randomInclusive(counts, ExodusConfig.OCCUPIED_CAMPS_MIN.get(), ExodusConfig.OCCUPIED_CAMPS_MAX.get());
         PlacementPlan camps = PlacementPolicy.plan(arena.id().getMostSignificantBits(), cx, cz, arena.arenaSize(),
                 abandoned, occupied, ExodusConfig.CAMP_MIN_DISTANCE.get(),
                 List.of("exodus:abandoned_camp_01"), List.of("exodus:occupied_camp_01"));
@@ -203,6 +209,11 @@ public final class ArenaPreparationService {
 
     private static int height(PlacementPlan.Entry entry) {
         return entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 20;
+    }
+
+    private static int randomInclusive(java.util.Random random, int minimum, int maximum) {
+        if (maximum < minimum) throw new IllegalStateException("Camp maximum cannot be smaller than minimum");
+        return minimum + random.nextInt(maximum - minimum + 1);
     }
 
     private static int placementY(ServerLevel level, PlacementPlan.Entry entry) {
