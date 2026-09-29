@@ -48,6 +48,20 @@ public final class TerrainColumnPolicy {
         return scanForSupport(states, oceanFloorY, minimumY, scanDepth);
     }
 
+    public static Integer findSurfaceSupportY(IntFunction<StateKind> states, int primaryY,
+                                               int oceanFloorY, int minimumY, int maximumY,
+                                               int scanDepth) {
+        if (maximumY < minimumY) throw new IllegalArgumentException("Surface scan range is invalid");
+        Integer heightmapResult = findSurfaceSupportY(states, primaryY, oceanFloorY, minimumY, scanDepth);
+        if (heightmapResult != null) return heightmapResult;
+        for (int y = maximumY; y >= minimumY; y--) {
+            StateKind kind = states.apply(y);
+            if (kind == StateKind.FLUID) return Math.addExact(y, 1);
+            if (kind == StateKind.SOLID) return y;
+        }
+        return null;
+    }
+
     private static Integer scanForSupport(IntFunction<StateKind> states, int startY,
                                           int minimumY, int scanDepth) {
         for (int depth = 0; depth <= scanDepth; depth++) {

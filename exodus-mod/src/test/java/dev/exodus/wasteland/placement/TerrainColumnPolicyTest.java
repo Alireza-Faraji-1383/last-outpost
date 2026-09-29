@@ -47,4 +47,14 @@ class TerrainColumnPolicyTest {
 
         assertEquals(65, supportY);
     }
+
+    @Test
+    void scansActualColumnWhenHeightmapsAreEmpty() {
+        int supportY = TerrainColumnPolicy.findSurfaceSupportY(
+                y -> y >= 50 && y <= 64 ? TerrainColumnPolicy.StateKind.FLUID
+                        : y == 49 ? TerrainColumnPolicy.StateKind.SOLID : TerrainColumnPolicy.StateKind.AIR,
+                -1, -1, -64, 319, 8);
+
+        assertEquals(65, supportY);
+    }
 }

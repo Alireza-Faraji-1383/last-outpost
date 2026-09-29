@@ -26,7 +26,8 @@ public final class TerrainPreparationService {
                 int oceanFloorCandidate = level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z) - 1;
                 Integer support = TerrainColumnPolicy.findSurfaceSupportY(
                         y -> TerrainColumnPolicy.classify(level.getBlockState(cursor.set(columnX, y, columnZ))),
-                        firstCandidate, oceanFloorCandidate, level.getMinBuildHeight(), SURFACE_SCAN_DEPTH);
+                        firstCandidate, oceanFloorCandidate, level.getMinBuildHeight(),
+                        level.getMaxBuildHeight() - 1, SURFACE_SCAN_DEPTH);
                 if (support != null) supports.add(support);
             }
         }
