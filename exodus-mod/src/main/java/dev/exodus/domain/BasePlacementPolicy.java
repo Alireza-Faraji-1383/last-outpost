@@ -25,12 +25,13 @@ public final class BasePlacementPolicy {
         int limitX = radius - borderSafeDistance - halfFootprintX;
         int limitZ = radius - borderSafeDistance - halfFootprintZ;
         if (Math.abs(candidate.x() - centerX) > limitX || Math.abs(candidate.z() - centerZ) > limitZ) return false;
-        if (!candidate.overheadClear()) return false;
-        return farEnough(candidate, currentBases) && farEnough(candidate, persistedBases);
+        return isFarEnough(candidate, currentBases, minimumDistance)
+                && isFarEnough(candidate, persistedBases, minimumDistance);
     }
 
-    private boolean farEnough(BaseCandidate candidate, List<BasePoint> bases) {
-        long minimumSquared = (long) minimumDistance * minimumDistance;
+    public boolean isFarEnough(BaseCandidate candidate, List<BasePoint> bases, int distance) {
+        if (distance < 0) throw new IllegalArgumentException("Minimum distance cannot be negative");
+        long minimumSquared = (long) distance * distance;
         for (BasePoint base : bases) {
             long dx = (long) candidate.x() - base.x();
             long dz = (long) candidate.z() - base.z();

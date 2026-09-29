@@ -23,8 +23,8 @@ class BasePlacementPolicyTest {
         assertTrue(policy.isValid(new BaseCandidate(0, 70, 0, 40, true, false, true), 0, 0, List.of(), List.of()));
     }
 
-    @Test void rejectsABlockedOrFloodedVolumeAboveTheBase() {
-        assertFalse(policy.isValid(new BaseCandidate(0, 70, 0, 1, false, true, false), 0, 0, List.of(), List.of()));
+    @Test void acceptsBlockedOrFloodedVolumeBecauseCommitManufacturesTerrain() {
+        assertTrue(policy.isValid(new BaseCandidate(0, 70, 0, 1, true, false, false), 0, 0, List.of(), List.of()));
     }
 
     @Test void rejectsCurrentAndPersistedBasesCloserThanMinimumDistance() {
@@ -32,5 +32,11 @@ class BasePlacementPolicyTest {
         assertFalse(policy.isValid(candidate, 0, 0, List.of(new BasePoint(100, 0)), List.of()));
         assertFalse(policy.isValid(candidate, 0, 0, List.of(), List.of(new BasePoint(0, 249))));
         assertTrue(policy.isValid(candidate, 0, 0, List.of(new BasePoint(250, 0)), List.of()));
+    }
+
+    @Test void keepsManufacturedBasesAwayFromArenaPois() {
+        var candidate = new BaseCandidate(0, 70, 0, 40, true, false, false);
+        assertFalse(policy.isFarEnough(candidate, List.of(new BasePoint(149, 0)), 150));
+        assertTrue(policy.isFarEnough(candidate, List.of(new BasePoint(150, 0)), 150));
     }
 }

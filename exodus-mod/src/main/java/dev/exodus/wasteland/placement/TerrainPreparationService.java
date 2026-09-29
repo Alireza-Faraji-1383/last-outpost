@@ -15,6 +15,11 @@ public final class TerrainPreparationService {
 
     public static SurfaceSample sample(ServerLevel level, SurfacePoi poi, int quorumPercent,
                                        int tolerance, int preferredMinY, int preferredMaxY) {
+        return sample(level, TerrainFootprint.from(poi), quorumPercent, tolerance, preferredMinY, preferredMaxY);
+    }
+
+    public static SurfaceSample sample(ServerLevel level, TerrainFootprint poi, int quorumPercent,
+                                       int tolerance, int preferredMinY, int preferredMaxY) {
         List<Integer> supports = new ArrayList<>();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         int totalColumns = Math.multiplyExact(poi.width(), poi.depth());
@@ -45,6 +50,11 @@ public final class TerrainPreparationService {
     }
 
     public static TerrainPreparationReport prepare(ServerLevel level, SurfacePoi poi, int platformY,
+                                                   int margin, int maximumFoundationDepth) {
+        return prepare(level, TerrainFootprint.from(poi), platformY, margin, maximumFoundationDepth);
+    }
+
+    public static TerrainPreparationReport prepare(ServerLevel level, TerrainFootprint poi, int platformY,
                                                    int margin, int maximumFoundationDepth) {
         if (margin < 0) throw new IllegalArgumentException("Terrain margin cannot be negative");
         validateBuildHeight(level, poi, platformY);
@@ -89,7 +99,22 @@ public final class TerrainPreparationService {
         return new TerrainPreparationReport(clearedBlocks, foundationBlocks, deepestFill);
     }
 
+    public static void validateFoundation(ServerLevel level, TerrainFootprint poi, int platformY,
+                                          int maximumFoundationDepth) {
+        validateBuildHeight(level, poi, platformY);
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int x = poi.x(); x <= poi.maxX(); x++) {
+            for (int z = poi.z(); z <= poi.maxZ(); z++) {
+                foundationDepth(level, cursor, poi.id(), x, z, platformY - 2, maximumFoundationDepth);
+            }
+        }
+    }
+
     public static void verify(ServerLevel level, SurfacePoi poi, int platformY, int maximumFoundationDepth) {
+        verify(level, TerrainFootprint.from(poi), platformY, maximumFoundationDepth);
+    }
+
+    public static void verify(ServerLevel level, TerrainFootprint poi, int platformY, int maximumFoundationDepth) {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
@@ -133,7 +158,7 @@ public final class TerrainPreparationService {
         throw failure(poiId, "no foundation support within " + maximumDepth + " blocks", x, firstY, z);
     }
 
-    private static void validateBuildHeight(ServerLevel level, SurfacePoi poi, int platformY) {
+    private static void validateBuildHeight(ServerLevel level, TerrainFootprint poi, int platformY) {
         if (platformY <= level.getMinBuildHeight() + 4) {
             throw new IllegalStateException("POI " + poi.id() + " selected implausible platform Y=" + platformY);
         }
