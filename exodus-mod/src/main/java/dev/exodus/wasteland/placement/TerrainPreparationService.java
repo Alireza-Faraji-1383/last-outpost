@@ -63,7 +63,7 @@ public final class TerrainPreparationService {
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
                 depths[x - poi.x()][z - poi.z()] = foundationDepth(level, cursor, poi.id(), x, z,
-                        platformY - 2, maximumFoundationDepth);
+                        FoundationHeightPolicy.fillStartY(platformY), maximumFoundationDepth);
             }
         }
 
@@ -71,11 +71,12 @@ public final class TerrainPreparationService {
         int deepestFill = 0;
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
-                level.setBlock(cursor.set(x, platformY - 1, z), Blocks.STONE.defaultBlockState(), 3);
+                level.setBlock(cursor.set(x, FoundationHeightPolicy.supportTopY(platformY), z),
+                        Blocks.STONE.defaultBlockState(), 3);
                 int depth = depths[x - poi.x()][z - poi.z()];
                 deepestFill = Math.max(deepestFill, depth);
                 for (int offset = 0; offset < depth; offset++) {
-                    BlockPos pos = cursor.set(x, platformY - 2 - offset, z);
+                    BlockPos pos = cursor.set(x, FoundationHeightPolicy.fillStartY(platformY) - offset, z);
                     if (TerrainColumnPolicy.needsFoundation(level.getBlockState(pos))) {
                         level.setBlock(pos, Blocks.STONE.defaultBlockState(), 3);
                         foundationBlocks++;
@@ -105,7 +106,8 @@ public final class TerrainPreparationService {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
-                foundationDepth(level, cursor, poi.id(), x, z, platformY - 2, maximumFoundationDepth);
+                foundationDepth(level, cursor, poi.id(), x, z,
+                        FoundationHeightPolicy.fillStartY(platformY), maximumFoundationDepth);
             }
         }
     }
@@ -118,11 +120,13 @@ public final class TerrainPreparationService {
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
-                BlockPos platform = cursor.set(x, platformY - 1, z);
+                int supportTopY = FoundationHeightPolicy.supportTopY(platformY);
+                BlockPos platform = cursor.set(x, supportTopY, z);
                 if (!TerrainColumnPolicy.isSurfaceSupport(level.getBlockState(platform))) {
-                    throw failure(poi.id(), "platform is not solid", x, platformY - 1, z);
+                    throw failure(poi.id(), "platform is not solid", x, supportTopY, z);
                 }
-                foundationDepth(level, cursor, poi.id(), x, z, platformY - 2, maximumFoundationDepth);
+                foundationDepth(level, cursor, poi.id(), x, z,
+                        FoundationHeightPolicy.fillStartY(platformY), maximumFoundationDepth);
             }
         }
     }
