@@ -2,11 +2,11 @@
 
 ## Goal
 
-Finish the playable match loop by binding every match player to their allocated base, making loot substantially more generous and varied, removing faction-key delivery from base chests, and ensuring manufactured foundations begin below the structure instead of competing with its bottom layer.
+Finish the playable match loop by binding every match player to their allocated base, making loot substantially more generous and varied, distributing the six craftable teleporter components through ordinary loot, and ensuring manufactured foundations begin below the structure instead of competing with its bottom layer.
 
 ## Scope
 
-This change covers match-player respawn targets, cleanup recovery for online and offline players, Exodus structure loot, Lost Cities chest mapping, faction-base elite loot, and the existing terrain-manufacturing depth. It does not add new items, mods, weapon mechanics, victory conditions, or loot UIs.
+This change covers match-player respawn targets, cleanup recovery for online and offline players, Exodus structure loot, Lost Cities chest mapping, craftable teleporter-component distribution, and the existing terrain-manufacturing depth. It does not add new items, mods, weapon mechanics, victory conditions, or loot UIs.
 
 ## Match Respawn Lifecycle
 
@@ -30,12 +30,14 @@ This change covers match-player respawn targets, cleanup recovery for online and
 - Ammunition remains more common than guns. Pistols and SMGs are lower-tier; rifles and shotguns are mid/high-tier; precision rifles are rare/high-tier.
 - RPGs, miniguns, launchers, and other explosive/heavy weapons are excluded from ordinary loot.
 - Lost Cities chest selection gains weapons, utility, tech, valuable, and elite mappings. Valuable and elite remain uncommon but are no longer impossible.
+- All ordinary chest families may yield the six craftable teleporter components: Reinforced Frame, Power Regulator, Phase Coil, Signal Processor, Spatial Lens, and Containment Module.
+- Component chance rises with chest quality: low in common and specialized tables, higher in standard and valuable, and highest in elite. A component is never guaranteed by an ordinary chest.
 
-## Faction Keys
+## Rare Teleporter Components
 
-- Russian and American base elite markers resolve to the ordinary elite table.
-- Remove the guaranteed Facility Alpha Key and Facility Beta Key faction loot tables and the unique-key claim path from marker processing.
-- Keep the registered key items, their match uniqueness rules outside loot placement, and the teleporter component requirements unchanged.
+- Keep the Facility Alpha Key and Facility Beta Key logic, faction-base guaranteed distribution, unique-claim behavior, and loot tables unchanged.
+- Keep the center-slot Dimensional Core completely unchanged and exclude it from all ordinary loot tables.
+- Keep all match binding, storage, crafting, rarity, and teleporter inventory rules unchanged.
 
 ## Foundation Ownership
 
@@ -55,7 +57,7 @@ This change covers match-player respawn targets, cleanup recovery for online and
 
 ## Verification
 
-- Unit/contract tests cover base-spawn assignment eligibility, cleanup reset eligibility, pending offline reset behavior, faction elite pass-through, absence of keys from loot tables, expanded TacZ gun families, useful blocks, approximately doubled roll budgets, and Lost Cities valuable/elite availability.
+- Unit/contract tests cover base-spawn assignment eligibility, cleanup reset eligibility, pending offline reset behavior, unchanged faction key routing, exclusion of the Dimensional Core, tier-scaled distribution of all six craftable components, expanded TacZ gun families, useful blocks, approximately doubled roll budgets, and Lost Cities valuable/elite availability.
 - Terrain tests prove support starts one block below the structure-owned bottom layer and preparation/verification agree.
 - Run the full Gradle test and build gates, then install the built JAR in `mods/`.
 - Manual acceptance remains the user's responsibility: start a fresh match, die and respawn at the personal base, stop/end and confirm later respawn uses default Overworld spawn, sample custom-structure and Lost Cities chests, and inspect a freshly prepared foundation.

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Bind match players to their bases, reset respawns safely at cleanup, broaden and roughly double loot, remove guaranteed faction keys, and move manufactured support below the structure-owned bottom layer.
+**Goal:** Bind match players to their bases, reset respawns safely at cleanup, broaden and roughly double loot, distribute the six craftable teleporter components by chest tier, and move manufactured support below the structure-owned bottom layer.
 
-**Architecture:** Add a small pure respawn policy plus a Minecraft-facing adapter used by `MatchManager`, keep loot data-driven through reusable tables and stable marker IDs, simplify faction elite resolution to ordinary elite loot, and make terrain preparation/verification share an explicit support-top calculation. Each subsystem is independently testable and lands in its own commit.
+**Architecture:** Add a small pure respawn policy plus a Minecraft-facing adapter used by `MatchManager`, keep loot data-driven through reusable tables and stable marker IDs while preserving rare-key routing, and make terrain preparation/verification share an explicit support-top calculation. Each subsystem is independently testable and lands in its own commit.
 
 **Tech Stack:** Java 17, Minecraft 1.20.1, Forge 47.4.10, JUnit 5, Gson contract tests, Minecraft loot-table JSON, Lost Cities chest conditions.
 
@@ -15,7 +15,8 @@
 - All player-facing text and logs remain English.
 - Do not add or remove third-party mods.
 - Keep existing loot marker table IDs stable.
-- Do not distribute Facility Alpha/Beta keys from faction base chests.
+- Preserve Facility Alpha/Beta key faction distribution and unique-claim logic exactly.
+- Exclude the Dimensional Core from ordinary chest loot.
 - Reset cleanup respawns to the current default Overworld world spawn; do not restore previous beds or anchors.
 - Preserve the structure Y coordinate and begin manufactured support exactly one block below its lowest layer.
 - Real in-game multiplayer and death/respawn acceptance remains manual and must not be reported as verified before the user confirms it.
@@ -24,8 +25,8 @@
 
 - A startup failure before commit must leave player respawns untouched; exercise this through the pure assignment policy test.
 - An offline player at cleanup must retain a one-shot pending Overworld respawn reset across save/load; exercise it in saved-data and lifecycle policy tests.
-- A faction elite marker processed after an old unique-key completion ID must still resolve to ordinary elite loot; exercise all placement IDs and both boolean states.
-- Loot JSON must reference only known curated TacZ item IDs and must not contain component keys; exercise exact resource strings in the contract test.
+- A faction elite marker must keep its existing first-key routing and unique-claim behavior; exercise both faction IDs and both claim states.
+- Loot JSON must reference only known curated TacZ item IDs, include all six craftable components with tier-scaled chances, and never contain the Dimensional Core; exercise exact resource strings in the contract test.
 - Terrain preparation and verification must calculate the same shifted support row at minimum build height and normal terrain; exercise the extracted support-Y policy boundary tests.
 
 ---
@@ -96,7 +97,7 @@ git add exodus-mod/src/main/java/dev/exodus/player exodus-mod/src/main/java/dev/
 git commit -m "feat(match): bind respawns to player bases"
 ```
 
-### Task 2: Composable Generous Loot and Faction-Key Removal
+### Task 2: Composable Generous Loot and Craftable Component Distribution
 
 **Files:**
 - Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/survival.json`
@@ -104,6 +105,10 @@ git commit -m "feat(match): bind respawns to player bases"
 - Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/weapons_common.json`
 - Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/weapons_valuable.json`
 - Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/weapons_elite.json`
+- Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/components_common.json`
+- Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/components_standard.json`
+- Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/components_valuable.json`
+- Create: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/bonus/components_elite.json`
 - Modify: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/general/common.json`
 - Modify: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/general/standard.json`
 - Modify: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/general/valuable.json`
@@ -114,36 +119,25 @@ git commit -m "feat(match): bind respawns to player bases"
 - Modify: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/utility.json`
 - Modify: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/tech.json`
 - Modify: `exodus-mod/src/main/resources/data/lostcities/lostcities/conditions/chestloot.json`
-- Modify: `exodus-mod/src/main/java/dev/exodus/wasteland/loot/FactionEliteLootPolicy.java`
-- Modify: `exodus-mod/src/main/java/dev/exodus/wasteland/loot/LootMarkerProcessor.java`
-- Delete: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/faction/russian_key.json`
-- Delete: `exodus-mod/src/main/resources/data/exodus/loot_tables/chests/faction/american_key.json`
-- Modify: `exodus-mod/src/test/java/dev/exodus/wasteland/loot/FactionEliteLootPolicyTest.java`
 - Modify: `exodus-mod/src/test/java/dev/exodus/wasteland/loot/LootTableContractTest.java`
 
 **Interfaces:**
 - Consumes: stable `LootMarker.lootTable()` IDs and vanilla `minecraft:loot_table` entry composition.
-- Produces: reusable bonus tables, curated TacZ gun rarity bands, and `FactionEliteLootPolicy.resolve(LootMarker, String, boolean)` that always returns the marker table with `claimsUniqueKey=false`.
+- Produces: reusable bonus tables, curated TacZ gun rarity bands, and tier-scaled tables containing exactly the six craftable teleporter components.
 
 - [ ] **Step 1: Replace old assertions with failing contracts**
 
-Assert that all marker and bonus JSON files parse; no file contains `facility_alpha_key`, `facility_beta_key`, or `dimensional_core`; faction key resources are absent; Russian/American elite markers always return `exodus:chests/general/elite`; weapon resources include at least two IDs in every approved family; useful Vanilla blocks are present; total roll maxima are approximately twice their old budgets; and Lost Cities mapping includes general valuable, general elite, weapons, utility, and tech with elite weighted below valuable and both below common.
+Assert that all marker and bonus JSON files parse; no ordinary table contains `facility_alpha_key`, `facility_beta_key`, or `dimensional_core`; the existing faction key resources still contain only their own guaranteed key; every component bonus contains all six craftable component IDs; component entry weights or table-selection chances increase from common through elite; weapon resources include at least two IDs in every approved family; useful Vanilla blocks are present; total roll maxima are approximately twice their old budgets; and Lost Cities mapping includes general valuable, general elite, weapons, utility, and tech with elite weighted below valuable and both below common.
 
 - [ ] **Step 2: Run focused loot tests and confirm red**
 
 Run: `./gradlew test --tests dev.exodus.wasteland.loot.LootTableContractTest --tests dev.exodus.wasteland.loot.FactionEliteLootPolicyTest`
 
-Expected: FAIL on missing bonus tables, old key routing, old roll budgets, and absent Lost Cities categories.
+Expected: FAIL on missing bonus/component tables, old roll budgets, and absent Lost Cities categories.
 
-- [ ] **Step 3: Simplify faction routing**
+- [ ] **Step 3: Preserve rare-component behavior**
 
-```java
-public static Assignment resolve(LootMarker marker, String placementId, boolean ignored) {
-    return new Assignment(marker.lootTable(), false);
-}
-```
-
-Remove unique-key completion bookkeeping from `LootMarkerProcessor`, delete both faction loot files, and retain the public signature during this compatibility change so existing callers and tests remain narrow.
+Run `FactionEliteLootPolicyTest` unchanged and verify that the first Russian/American elite marker still assigns its faction table, later markers return ordinary elite loot, and unique-key claims remain one per faction placement. Do not modify `FactionEliteLootPolicy`, `LootMarkerProcessor`, either faction key table, `RareClaimPolicy`, or Dimensional Core behavior.
 
 - [ ] **Step 4: Add reusable survival and block bonuses**
 
@@ -153,17 +147,21 @@ Build `bonus/survival.json` from weighted food, medicine, utility, and ammunitio
 
 Use verified default-pack IDs. Common examples: `tacz:glock_17`, `tacz:m1911`, `tacz:cz75`, `tacz:hk_mp5a5`, `tacz:uzi`, `tacz:ump45`. Valuable examples: `tacz:ak47`, `tacz:m4a1`, `tacz:hk416d`, `tacz:scar_l`, `tacz:m870`, `tacz:m1014`. Elite examples: `tacz:kar98`, `tacz:m700`, `tacz:ai_awp`, `tacz:m107`, `tacz:scar_h`, `tacz:mk14`. Confirm every chosen ID exists in the installed TacZ default pack before adding it. Keep ammo weight above guns and exclude launcher/minigun IDs.
 
-- [ ] **Step 6: Expand specialized and Lost Cities tables**
+- [ ] **Step 6: Add tier-scaled craftable component bonuses**
+
+Create four component bonus tables containing exactly `exodus:reinforced_frame`, `exodus:power_regulator`, `exodus:phase_coil`, `exodus:signal_processor`, `exodus:spatial_lens`, and `exodus:containment_module`. Reference them from every general and specialized chest family. Configure low chance for common and specialized loot, then increasing standard, valuable, and elite chances; never add `exodus:dimensional_core`, `exodus:facility_alpha_key`, or `exodus:facility_beta_key` to these tables.
+
+- [ ] **Step 7: Expand specialized and Lost Cities tables**
 
 Raise useful roll budgets to roughly twice their previous output, add item variety without removing each table's identity, and map Lost Cities weights to all categories. Use a 100-point distribution where common/standard remain dominant, food/medical remain meaningful, weapons/utility/tech are present, and elite is rarer than valuable.
 
-- [ ] **Step 7: Run focused contracts**
+- [ ] **Step 8: Run focused contracts**
 
 Run: `./gradlew test --tests dev.exodus.wasteland.loot.LootTableContractTest --tests dev.exodus.wasteland.loot.FactionEliteLootPolicyTest`
 
-Expected: PASS with all resources parseable and no faction key distribution.
+Expected: PASS with all resources parseable, faction key behavior preserved, all six craftable components tier-scaled, and the Dimensional Core absent from ordinary loot.
 
-- [ ] **Step 8: Commit the loot slice**
+- [ ] **Step 9: Commit the loot slice**
 
 ```powershell
 git add exodus-mod/src/main/java/dev/exodus/wasteland/loot exodus-mod/src/main/resources/data/exodus/loot_tables exodus-mod/src/main/resources/data/lostcities exodus-mod/src/test/java/dev/exodus/wasteland/loot
