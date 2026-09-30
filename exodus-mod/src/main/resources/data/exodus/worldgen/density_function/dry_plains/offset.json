@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:add",
+  "argument1": -0.46875,
+  "argument2": {
+    "type": "minecraft:mul",
+    "argument1": 0.045,
+    "argument2": {
+      "type": "minecraft:cache_2d",
+      "argument": {
+        "type": "minecraft:noise",
+        "noise": "minecraft:continentalness",
+        "xz_scale": 0.75,
+        "y_scale": 0.0
+      }
+    }
+  }
+}

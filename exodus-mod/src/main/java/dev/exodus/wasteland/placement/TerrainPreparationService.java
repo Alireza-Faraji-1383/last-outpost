@@ -3,6 +3,9 @@ package dev.exodus.wasteland.placement;
 import dev.exodus.ExodusConfig;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -20,6 +23,59 @@ public final class TerrainPreparationService {
 
     public static SurfaceSample sample(ServerLevel level, TerrainFootprint poi, int quorumPercent,
                                        int tolerance, int preferredMinY, int preferredMaxY) {
+        return sample(level, poi, quorumPercent, tolerance, preferredMinY, preferredMaxY,
+                level.getMaxBuildHeight() - 1, null);
+    }
+
+    /** Used only for arena POIs; player-base preflight must remain read-only. */
+    public static SurfaceSample sampleWithRecovery(ServerLevel level, SurfacePoi poi, int quorumPercent,
+                                                   int tolerance, int preferredMinY, int preferredMaxY) {
+        TerrainFootprint footprint = TerrainFootprint.from(poi);
+        int highest = level.getMinBuildHeight();
+        for (int x = poi.x(); x <= poi.maxX(); x++) {
+            for (int z = poi.z(); z <= poi.maxZ(); z++) {
+                highest = Math.max(highest, level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1);
+            }
+        }
+        final int initialCeiling = highest;
+        Set<BlockPos> glass = new HashSet<>();
+        var recovery = SurfaceRecoveryPolicy.find(initialCeiling,
+                Math.min(ExodusConfig.MAX_SURFACE_CLEAR_DEPTH.get(), initialCeiling - level.getMinBuildHeight()),
+                ceiling -> sample(level, footprint, quorumPercent, tolerance, preferredMinY, preferredMaxY,
+                        ceiling, glass));
+        // Check foundations before making irreversible terrain changes.
+        validateFoundation(level, footprint, recovery.sample().selection().platformY(),
+                ExodusConfig.MAX_FOUNDATION_DEPTH.get());
+        int cleared = 0;
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int x = poi.x(); x <= poi.maxX(); x++) {
+            for (int z = poi.z(); z <= poi.maxZ(); z++) {
+                for (int y = initialCeiling; y > recovery.ceilingY(); y--) {
+                    BlockPos pos = cursor.set(x, y, z);
+                    if (!level.getBlockState(pos).isAir()) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                        cleared++;
+                    }
+                }
+            }
+        }
+        int brokenGlass = 0;
+        for (BlockPos pos : glass) {
+            if (TerrainColumnPolicy.classify(level.getBlockState(pos)) == TerrainColumnPolicy.StateKind.GLASS) {
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+                brokenGlass++;
+            }
+        }
+        if (cleared > 0 || brokenGlass > 0) {
+            LogUtils.getLogger().info("[Exodus] POI {} surface recovery: cleared={} glass={} depth={}; resampling floor.",
+                    poi.id(), cleared, brokenGlass, initialCeiling - recovery.ceilingY());
+        }
+        return sample(level, footprint, quorumPercent, tolerance, preferredMinY, preferredMaxY);
+    }
+
+    private static SurfaceSample sample(ServerLevel level, TerrainFootprint poi, int quorumPercent,
+                                        int tolerance, int preferredMinY, int preferredMaxY,
+                                        int ceilingY, Set<BlockPos> encounteredGlass) {
         List<Integer> supports = new ArrayList<>();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         int totalColumns = Math.multiplyExact(poi.width(), poi.depth());
@@ -27,12 +83,18 @@ public final class TerrainPreparationService {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
                 int columnX = x;
                 int columnZ = z;
-                int firstCandidate = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
-                int oceanFloorCandidate = level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z) - 1;
+                int firstCandidate = Math.min(ceilingY, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1);
+                int oceanFloorCandidate = Math.min(ceilingY, level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z) - 1);
                 Integer support = TerrainColumnPolicy.findSurfaceSupportY(
-                        y -> TerrainColumnPolicy.classify(level.getBlockState(cursor.set(columnX, y, columnZ))),
+                        y -> {
+                            var kind = TerrainColumnPolicy.classify(level.getBlockState(cursor.set(columnX, y, columnZ)));
+                            if (kind == TerrainColumnPolicy.StateKind.GLASS && encounteredGlass != null) {
+                                encounteredGlass.add(cursor.immutable());
+                            }
+                            return kind;
+                        },
                         firstCandidate, oceanFloorCandidate, level.getMinBuildHeight(),
-                        level.getMaxBuildHeight() - 1, SURFACE_SCAN_DEPTH);
+                        ceilingY, SURFACE_SCAN_DEPTH);
                 if (support != null) supports.add(support);
             }
         }

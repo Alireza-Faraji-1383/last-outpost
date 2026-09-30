@@ -52,7 +52,7 @@ Valid support heights are grouped into a histogram. For each candidate Y, Exodus
 
 The range Y=55 through Y=70 is preferred as a tie-breaker, not enforced as a hard limit. A valid higher surface is accepted. A single floating block or small overhang cannot raise the platform because it cannot satisfy the 50-percent quorum.
 
-Preparation fails clearly if no candidate satisfies the quorum, the result is implausibly close to the dimension minimum, or the structure would exceed the build height. It must never fall back to Y=0.
+Approved update (2026-09-30): when no candidate satisfies the quorum, arena POIs retry with progressively lower inspection ceilings, up to `maxSurfaceClearDepth` (default 32 blocks). The inspection remains read-only until a qualifying floor and valid foundation are found. Blocks above the successful ceiling are then removed within the POI footprint and the actual floor is sampled again. Encountered glass and glass panes are ignored as support and removed before resampling. Player-base allocation remains read-only. Preparation fails clearly when bounded recovery cannot find a quorum, the result is implausibly close to the dimension minimum, or the structure would exceed the build height. It must never fall back to Y=0.
 
 ### 5. Manufacture the site
 
@@ -96,6 +96,7 @@ Gameplay thresholds belong in `ExodusConfig`. The initial defaults are:
 - preferred minimum surface Y: 55
 - preferred maximum surface Y: 70
 - maximum foundation depth: 96 blocks
+- maximum surface recovery clearing depth: 32 blocks (0 disables layer recovery)
 - foundation block: `minecraft:stone`
 - POI chunks generated per tick: a bounded positive value chosen to avoid a long server-tick stall
 
@@ -122,7 +123,7 @@ These diagnostics must distinguish chunk generation, surface selection, terrain 
 ## Failure behavior
 
 - Missing or invalid templates retain their current mandatory-placement failure behavior.
-- No valid surface quorum: fail the POI; do not move it and do not use Y=0.
+- No valid surface quorum: attempt bounded top-down clearing at the same X/Z; fail the POI only if recovery cannot satisfy the quorum. Do not use Y=0.
 - Structure exceeds build height: fail before terrain mutation.
 - No foundation support within 96 blocks: fail the POI and arena preparation.
 - Restart during preparation: resume from persisted progress and revalidate the last completed phase.

@@ -193,7 +193,7 @@ public final class ArenaPreparationService {
                 }
                 case SELECT_SURFACE -> {
                     arena.checkpoint().phase = ArenaPhase.TERRAIN_PREPARATION;
-                    var sample = TerrainPreparationService.sample(level, poi, ExodusConfig.SURFACE_QUORUM_PERCENT.get(),
+                    var sample = TerrainPreparationService.sampleWithRecovery(level, poi, ExodusConfig.SURFACE_QUORUM_PERCENT.get(),
                             ExodusConfig.SURFACE_HEIGHT_TOLERANCE.get(), ExodusConfig.PREFERRED_SURFACE_MIN_Y.get(),
                             ExodusConfig.PREFERRED_SURFACE_MAX_Y.get());
                     state.platformY = sample.selection().platformY();

@@ -3,10 +3,11 @@ package dev.exodus.wasteland.placement;
 import java.util.List;
 import java.util.function.IntFunction;
 import net.minecraft.tags.BlockTags;
+import net.minecraftforge.common.Tags;
 import net.minecraft.world.level.block.state.BlockState;
 
 public final class TerrainColumnPolicy {
-    public enum StateKind { AIR, FLUID, LEAVES, REPLACEABLE, SOLID }
+    public enum StateKind { AIR, FLUID, LEAVES, REPLACEABLE, GLASS, SOLID }
 
     private TerrainColumnPolicy() {}
 
@@ -76,6 +77,7 @@ public final class TerrainColumnPolicy {
         if (state.isAir()) return StateKind.AIR;
         if (!state.getFluidState().isEmpty()) return StateKind.FLUID;
         if (state.is(BlockTags.LEAVES)) return StateKind.LEAVES;
+        if (state.is(Tags.Blocks.GLASS) || state.is(Tags.Blocks.GLASS_PANES)) return StateKind.GLASS;
         if (state.canBeReplaced()) return StateKind.REPLACEABLE;
         return StateKind.SOLID;
     }
