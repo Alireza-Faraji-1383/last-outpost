@@ -1,0 +1,1 @@
+{"display_name":"AI AWP Package","icon":"minecraft:emerald","loot_table":"exodus:supply_drops/special_sniper_ai_awp","radio_types":["special"],"max_requests":2,"cooldown_seconds":90,"cost":{"item":"minecraft:emerald","count":36},"drop":{"smoke_color":"#8B5CF6"},"enabled":true,"sort_order":52,"quota_group":"exodus:special_sniper","contents":"AI AWP, 15 rounds of 338, 8x Scope"}

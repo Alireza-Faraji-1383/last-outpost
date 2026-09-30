@@ -1,0 +1,1 @@
+{"display_name":"SCAR H Package","icon":"minecraft:emerald","loot_table":"exodus:supply_drops/special_rifle_scar_h","radio_types":["special"],"max_requests":2,"cooldown_seconds":90,"cost":{"item":"minecraft:emerald","count":30},"drop":{"smoke_color":"#8B5CF6"},"enabled":true,"sort_order":51,"quota_group":"exodus:special_rifle","contents":"SCAR H, 80 rounds of 308, Red Dot"}

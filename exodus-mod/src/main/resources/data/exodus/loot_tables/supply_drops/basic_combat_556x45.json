@@ -1,0 +1,1 @@
+{"type":"minecraft:chest","pools":[{"rolls":1,"entries":[{"type":"minecraft:item","name":"tacz:ammo","weight":1,"functions":[{"function":"minecraft:set_count","count":90},{"function":"minecraft:set_nbt","tag":"{AmmoId:\"tacz:556x45\"}"}]}]}]}

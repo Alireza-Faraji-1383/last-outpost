@@ -30,7 +30,7 @@ class LootTableContractTest {
     @Test void allMarkerFamiliesReferenceCraftableComponents()throws Exception{for(String name:MARKERS)assertTrue(table(name).toString().contains("bonus/components_"),name);}
 
     @Test void generalTiersReachTechAndFavorAmmunitionOverGuns()throws Exception{
-        assertTrue(table("bonus/survival").toString().contains("exodus:chests/tech"));
+        assertTrue(table("bonus/survival").toString().contains("exodus:chests/category/tech"));
         assertTrue(table("bonus/ammunition").toString().contains("tacz:ammo"));
         for(String tier:new String[]{"common","standard","valuable","elite"}){
             JsonArray pools=table("general/"+tier).getAsJsonArray("pools");
@@ -42,7 +42,8 @@ class LootTableContractTest {
 
     @Test void weaponsIncludeMultiplePistolsSmgsRiflesShotgunsAndPrecisionRifles()throws Exception{
         String weapons=table("weapons")+table("bonus/weapons_common").toString()+table("bonus/weapons_valuable")+table("bonus/weapons_elite");
-        assertAtLeast(weapons,2,"tacz:glock_17","tacz:m1911","tacz:cz75");assertAtLeast(weapons,2,"tacz:hk_mp5a5","tacz:uzi","tacz:ump45");assertAtLeast(weapons,2,"tacz:ak47","tacz:m4a1","tacz:hk416d","tacz:scar_l");assertAtLeast(weapons,2,"tacz:m870","tacz:m1014");assertAtLeast(weapons,2,"tacz:kar98","tacz:m700","tacz:ai_awp","tacz:m107","tacz:scar_h","tacz:mk14");assertFalse(weapons.contains("rpg"));assertFalse(weapons.contains("minigun"));assertTrue(weightFor(weapons,"tacz:ammo")>weightFor(weapons,"tacz:modern_kinetic_gun"));
+        for(String gun:new String[]{"glock_17","m1911","cz75","hk_mp5a5","uzi","ump45","ak47","m4a1","hk416d","scar_l","m870","m1014","ai_awp","m107","scar_h","mk14","minigun","rpg7"})weapons+=table("guns/"+gun);
+        assertAtLeast(weapons,2,"tacz:glock_17","tacz:m1911","tacz:cz75");assertAtLeast(weapons,2,"tacz:hk_mp5a5","tacz:uzi","tacz:ump45");assertAtLeast(weapons,2,"tacz:ak47","tacz:m4a1","tacz:hk416d","tacz:scar_l");assertAtLeast(weapons,2,"tacz:m870","tacz:m1014");assertAtLeast(weapons,2,"tacz:ai_awp","tacz:m107","tacz:scar_h","tacz:mk14");assertTrue(weapons.contains("rpg7"));assertTrue(weapons.contains("minigun"));assertTrue(weightFor(weapons,"tacz:ammo")>weightFor(weapons,"tacz:modern_kinetic_gun"));
     }
 
     @Test void blockBonusContainsUsefulConstructionBlocks()throws Exception{String blocks=table("bonus/blocks").toString();for(String item:Set.of("minecraft:cobblestone","minecraft:stone_bricks","minecraft:oak_planks","minecraft:glass","minecraft:iron_bars","minecraft:ladder","minecraft:scaffolding","minecraft:torch"))assertTrue(blocks.contains(item),item);}

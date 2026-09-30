@@ -19,6 +19,7 @@ public final class SupplyDefinitionValidator {
     public static List<Error> validate(SupplyDefinition definition) {
         List<Error> errors = new ArrayList<>();
         resource(errors, "id", definition.id());
+        resource(errors, "quota_group", definition.quotaGroup());
         if (definition.displayName() == null || definition.displayName().isBlank())
             errors.add(new Error("display_name", "must not be blank"));
         resource(errors, "icon", definition.iconItemId());

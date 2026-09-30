@@ -14,6 +14,7 @@ public final class SupplyJsonParser {
         Integer color=parseColor(json,errors);SupplyCost cost=null;
         if(json.has("cost")){JsonObject c=json.getAsJsonObject("cost");cost=new SupplyCost(string(c,"item",""),integer(c,"count",0));}
         SupplyDefinition d=new SupplyDefinition(id,string(json,"display_name",""),string(json,"icon",""),string(json,"loot_table",""),types,integer(json,"max_requests",0),integer(json,"cooldown_seconds",0),cost,color==null?-1:color,bool(json,"enabled",true),integer(json,"sort_order",0));
+        d=new SupplyDefinition(d.id(),d.displayName(),d.iconItemId(),d.lootTableId(),d.radioTypes(),d.maxRequests(),d.cooldownSeconds(),d.cost(),d.smokeColor(),d.enabled(),d.sortOrder(),string(json,"quota_group",id),string(json,"contents",""));
         SupplyDefinitionValidator.validate(d).forEach(e->errors.add(e.field()+": "+e.message()));return new Result(d,List.copyOf(errors));
     }
     private static Integer parseColor(JsonObject json,List<String> errors){try{String s=json.getAsJsonObject("drop").get("smoke_color").getAsString();if(!s.matches("#[0-9A-Fa-f]{6}"))throw new IllegalArgumentException();return Integer.parseInt(s.substring(1),16);}catch(Exception e){errors.add("drop.smoke_color: expected #RRGGBB");return null;}}

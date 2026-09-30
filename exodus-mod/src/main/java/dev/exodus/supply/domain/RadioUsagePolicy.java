@@ -7,6 +7,11 @@ public final class RadioUsagePolicy {
     public enum Decision { ALLOW, QUOTA_EXHAUSTED, COOLDOWN }
 
     private RadioUsagePolicy() {}
+    public static long cooldownUntil(Iterable<RadioUsage> usages, UUID matchId) {
+        long until=0;
+        for(RadioUsage usage:usages)until=Math.max(until,normalize(usage,matchId).cooldownUntilTick());
+        return until;
+    }
 
     public static RadioUsage normalize(RadioUsage usage, UUID activeMatchId) {
         if (usage == null || !Objects.equals(usage.matchId(), activeMatchId))

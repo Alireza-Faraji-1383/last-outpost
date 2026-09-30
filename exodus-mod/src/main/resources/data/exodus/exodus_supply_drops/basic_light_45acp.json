@@ -1,0 +1,1 @@
+{"display_name":"Light Ammo: 45acp","icon":"minecraft:emerald","loot_table":"exodus:supply_drops/basic_light_45acp","radio_types":["basic","special"],"max_requests":3,"cooldown_seconds":30,"cost":{"item":"minecraft:emerald","count":5},"drop":{"smoke_color":"#C47A35"},"enabled":true,"sort_order":11,"quota_group":"exodus:basic_light","contents":"96 rounds of 45acp"}

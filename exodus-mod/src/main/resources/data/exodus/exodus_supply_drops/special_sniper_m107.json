@@ -1,0 +1,1 @@
+{"display_name":"M107 Package","icon":"minecraft:emerald","loot_table":"exodus:supply_drops/special_sniper_m107","radio_types":["special"],"max_requests":2,"cooldown_seconds":90,"cost":{"item":"minecraft:emerald","count":36},"drop":{"smoke_color":"#8B5CF6"},"enabled":true,"sort_order":52,"quota_group":"exodus:special_sniper","contents":"M107, 30 rounds of 50bmg, 8x Scope"}

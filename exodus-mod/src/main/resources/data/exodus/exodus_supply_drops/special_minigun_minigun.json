@@ -1,0 +1,1 @@
+{"display_name":"MINIGUN Package","icon":"minecraft:emerald","loot_table":"exodus:supply_drops/special_minigun_minigun","radio_types":["special"],"max_requests":2,"cooldown_seconds":90,"cost":{"item":"minecraft:emerald","count":50},"drop":{"smoke_color":"#8B5CF6"},"enabled":true,"sort_order":54,"quota_group":"exodus:special_minigun","contents":"MINIGUN, 200 rounds of 308"}

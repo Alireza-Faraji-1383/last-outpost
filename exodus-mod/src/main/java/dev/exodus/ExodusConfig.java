@@ -5,6 +5,9 @@ import java.util.List;
 
 public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.IntValue ENEMY_AMMO_MIN, ENEMY_AMMO_MAX, ENEMY_EMERALD_MIN, ENEMY_EMERALD_MAX;
+    public static final ForgeConfigSpec.DoubleValue ENEMY_EMERALD_CHANCE;
+    public static final ForgeConfigSpec.IntValue BASIC_RADIO_COOLDOWN_SECONDS, SPECIAL_RADIO_COOLDOWN_SECONDS;
     public static final ForgeConfigSpec.IntValue MATCH_RADIUS, BORDER_SIZE, BASE_MIN_DISTANCE,
             BORDER_SAFE_DISTANCE, MAX_LOCATION_ATTEMPTS, MAX_ALLOCATION_ROUNDS, MAX_RANDOM_CENTER_ATTEMPTS,
             RANDOM_CENTER_SEARCH_RADIUS, MAX_PLAYERS, MAX_HEIGHT_VARIATION, CHECKS_PER_TICK,
@@ -26,6 +29,13 @@ public final class ExodusConfig {
 
     static {
         var b = new ForgeConfigSpec.Builder();
+        b.push("enemyLoot");
+        ENEMY_AMMO_MIN=b.defineInRange("ammoMinimum",16,1,64);
+        ENEMY_AMMO_MAX=b.defineInRange("ammoMaximum",32,1,64);
+        ENEMY_EMERALD_MIN=b.defineInRange("emeraldMinimum",1,1,64);
+        ENEMY_EMERALD_MAX=b.defineInRange("emeraldMaximum",3,1,64);
+        ENEMY_EMERALD_CHANCE=b.defineInRange("emeraldChance",.10,0.0,1.0);
+        b.pop();
         b.push("foundation");
         MATCH_RADIUS = b.defineInRange("matchRadius", 1000, 128, 30000);
         BORDER_SIZE = b.defineInRange("borderSize", 2000, 256, 60000);
@@ -75,6 +85,8 @@ public final class ExodusConfig {
         NATURAL_HOSTILE_SPAWNS = b.define("naturalHostileSpawns", true);
         b.pop();
         b.push("supplyDrops");
+        BASIC_RADIO_COOLDOWN_SECONDS=b.defineInRange("basicRadioCooldownSeconds",30,0,86400);
+        SPECIAL_RADIO_COOLDOWN_SECONDS=b.defineInRange("specialRadioCooldownSeconds",90,0,86400);
         RADIO_LINK_RANGE = b.defineInRange("radioLinkRange", 128, 1, 4096);
         DROP_SPAWN_HEIGHT = b.defineInRange("dropSpawnHeight", 80, 8, 512);
         DROP_SPEED_MILLIBLOCKS = b.defineInRange("dropSpeedMilliblocksPerTick", 125, 10, 1000);
