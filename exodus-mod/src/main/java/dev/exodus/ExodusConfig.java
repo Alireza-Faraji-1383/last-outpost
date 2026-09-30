@@ -95,7 +95,7 @@ public final class ExodusConfig {
         MAX_HEIGHT_VARIATION = b.defineInRange("maxBaseHeightVariation", 6, 0, 64);
         CHECKS_PER_TICK = b.defineInRange("locationChecksPerTick", 2, 1, 100);
         STARTING_TIMEOUT_SECONDS = b.defineInRange("startingTimeoutSeconds", 120, 10, 3600);
-        DISCONNECT_GRACE_SECONDS = b.defineInRange("disconnectGraceSeconds", 120, 1, 3600);
+        DISCONNECT_GRACE_SECONDS = b.defineInRange("disconnectGraceSeconds", 3600, 1, 3600);
         SPAWN_SEARCH_RADIUS = b.defineInRange("spawnSearchRadius", 5, 0, 32);
         BASE_PLAYER_OFFSET_X = b.defineInRange("basePlayerOffsetX", 0, -128, 128);
         BASE_PLAYER_OFFSET_Y = b.defineInRange("basePlayerOffsetY", 2, -64, 128);

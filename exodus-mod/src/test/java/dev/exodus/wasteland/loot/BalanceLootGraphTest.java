@@ -9,6 +9,24 @@ import static org.junit.jupiter.api.Assertions.*;
 class BalanceLootGraphTest {
     private static final Path ROOT=Path.of("src/main/resources/data/exodus/loot_tables");
     private JsonObject table(String name)throws Exception{return JsonParser.parseString(Files.readString(ROOT.resolve(name+".json"))).getAsJsonObject();}
+    @Test void ammoIdentityPrecedesCountAndEachOutputFitsItsNativeStack()throws Exception{
+        Map<String,Integer> sizes=Map.of("12g",36,"308",48,"30_06",36,"338",30,"45acp",60,"50bmg",30,"556x45",60,"762x39",60,"9mm",60,"rpg_rocket",6);
+        try(var files=Files.walk(ROOT)){
+            for(Path file:files.filter(p->p.toString().endsWith(".json")).toList()){
+                var json=JsonParser.parseString(Files.readString(file)).getAsJsonObject();
+                for(JsonElement pool:json.getAsJsonArray("pools"))for(JsonElement entry:pool.getAsJsonObject().getAsJsonArray("entries")){
+                    var e=entry.getAsJsonObject();if(!e.has("name")||!e.get("name").getAsString().equals("tacz:ammo"))continue;
+                    var functions=e.getAsJsonArray("functions");
+                    assertEquals("minecraft:set_nbt",functions.get(0).getAsJsonObject().get("function").getAsString(),file.toString());
+                    String tag=functions.get(0).getAsJsonObject().get("tag").getAsString();
+                    String ammo=tag.substring(tag.indexOf("tacz:")+5,tag.lastIndexOf('"'));
+                    int count=functions.get(1).getAsJsonObject().get("count").getAsInt();
+                    assertTrue(count>0&&count<=sizes.get(ammo),file+": "+ammo+" count="+count);
+                    if(file.toString().contains("chests"))assertEquals(sizes.get(ammo).intValue(),count,file.toString());
+                }
+            }
+        }
+    }
     @Test void emeraldChanceCannotMultiplyThroughNestedCategoryLoot()throws Exception{
         for(String tier:List.of("common","standard","valuable","elite"))
             assertEquals(tier.equals("common")||tier.equals("standard")?.15:.25,1-noEmerald("chests/general/"+tier,new HashSet<>()),1e-6,tier);

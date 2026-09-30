@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import zipfile
+import copy
 from pathlib import Path
 
 INSTANCE = Path(sys.argv[1])
@@ -21,10 +22,10 @@ def write(relative, value):
 def item(name, count=None, weight=1, tag=None, durability=None):
     e = dict(type='minecraft:item', name=name, weight=weight)
     f = []
-    if count is not None:
-        f.append(dict(function='minecraft:set_count', count=count))
     if tag:
         f.append(dict(function='minecraft:set_nbt', tag=tag))
+    if count is not None:
+        f.append(dict(function='minecraft:set_count', count=count))
     if durability:
         f.append(dict(function='minecraft:set_damage', damage=dict(min=durability[0], max=durability[1])))
     if f:
@@ -45,7 +46,9 @@ def loot(name, pools):
 
 def ammo(ammo_id, count, weight=1):
     assert (GUNS / 'index/ammo' / (ammo_id.split(':')[1] + '.json')).exists(), ammo_id
-    return item('tacz:ammo', count, weight, '{AmmoId:"' + ammo_id + '"}')
+    stack = read_pack(GUNS / 'index/ammo' / (ammo_id.split(':')[1] + '.json'))['stack_size']
+    amount = max(stack, count) if isinstance(count, int) else stack
+    return item('tacz:ammo', amount, weight, '{AmmoId:"' + ammo_id + '"}')
 
 def gun_data(gun):
     namespace,name=gun.split(':') if ':' in gun else ('tacz',gun)
@@ -165,6 +168,24 @@ for category in ['food','medical','utility','tech']:
 loot('chests/bonus/survival',[pool([ref('chests/category/food',5),ref('chests/category/medical',4),ref('chests/category/utility',3),ref('chests/category/tech',2)])])
 
 def supply(id, name, price, contents, pools, special=False, group=None, icon='minecraft:emerald', order=50):
+    extra = []
+    for p in pools:
+        for entry in p['entries']:
+            if entry.get('name') != 'tacz:ammo':
+                continue
+            functions = entry['functions']
+            ammo_id = re.search(r'AmmoId:"tacz:([^\"]+)"', functions[0]['tag']).group(1)
+            stack = read_pack(GUNS / 'index/ammo' / (ammo_id + '.json'))['stack_size']
+            amount = functions[1]['count']
+            contents = re.sub(r'\d+ rounds of ' + re.escape(ammo_id), str(amount) + ' rounds of ' + ammo_id, contents)
+            functions[1]['count'] = min(stack, amount)
+            remaining = amount - functions[1]['count']
+            while remaining:
+                chunk = copy.deepcopy(entry)
+                chunk['functions'][1]['count'] = min(stack, remaining)
+                extra.append(pool([chunk]))
+                remaining -= min(stack, remaining)
+    pools = pools + extra
     write('exodus_supply_drops/'+id,dict(display_name=name,icon=icon,loot_table='exodus:supply_drops/'+id,radio_types=['special'] if special else ['basic','special'],max_requests=2 if special else 3,cooldown_seconds=90 if special else 30,cost=dict(item='minecraft:emerald',count=price),drop=dict(smoke_color='#8B5CF6' if special else '#C47A35'),enabled=True,sort_order=order,quota_group='exodus:'+(group or id),contents=contents))
     loot('supply_drops/'+id,pools)
 
