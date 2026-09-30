@@ -10,6 +10,17 @@ public final class WastelandProfileDefinition {
 
     private WastelandProfileDefinition() {}
 
+    /** Compatibility with pinned Lost Cities 7.5.5: profile callbacks registered
+     * through enqueue IMC arrive after its constructor has set up profiles. */
+    public static void ensureRuntimeProfile() {
+        var profiles = mcjty.lostcities.config.ProfileSetup.STANDARD_PROFILES;
+        if (profiles.containsKey(PROFILE_NAME)) return;
+        if (!profiles.containsKey(BASE_PROFILE)) {
+            throw new IllegalStateException("Lost Cities base profile " + BASE_PROFILE + " is unavailable");
+        }
+        register(new mcjty.lostcities.config.LostCityProfileSetupImp());
+    }
+
     public static void register(ILostCityProfileSetup setup) {
         ILostCityProfile profile = setup.createProfile(PROFILE_NAME, BASE_PROFILE);
         profile.setDescription("Project Exodus: medium-ruined competitive wasteland");

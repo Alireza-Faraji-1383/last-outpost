@@ -53,8 +53,8 @@ public final class TerrainColumnPolicy {
                                                int oceanFloorY, int minimumY, int maximumY,
                                                int scanDepth) {
         if (maximumY < minimumY) throw new IllegalArgumentException("Surface scan range is invalid");
-        Integer heightmapResult = findSurfaceSupportY(states, primaryY, oceanFloorY, minimumY, scanDepth);
-        if (heightmapResult != null) return heightmapResult;
+        // A stale heightmap can point at a solid underground layer. Scan from the
+        // inspection ceiling before accepting it, not only when its block is air.
         for (int y = maximumY; y >= minimumY; y--) {
             StateKind kind = states.apply(y);
             if (kind == StateKind.FLUID) return Math.addExact(y, 1);

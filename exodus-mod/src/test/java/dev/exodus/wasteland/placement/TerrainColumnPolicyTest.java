@@ -11,6 +11,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TerrainColumnPolicyTest {
     @Test
+    void staleBottomHeightmapMustNotHideActualSurface() {
+        assertEquals(64, TerrainColumnPolicy.findSurfaceSupportY(
+                y -> y <= 64 ? TerrainColumnPolicy.StateKind.SOLID : TerrainColumnPolicy.StateKind.AIR,
+                0, 0, 0, 90, 8));
+    }
+
+    @Test
+    void staleOceanFloorMustNotHideWaterSurface() {
+        assertEquals(65, TerrainColumnPolicy.findSurfaceSupportY(
+                y -> y <= 49 ? TerrainColumnPolicy.StateKind.SOLID
+                        : y <= 64 ? TerrainColumnPolicy.StateKind.FLUID : TerrainColumnPolicy.StateKind.AIR,
+                0, 0, 0, 90, 8));
+    }
+    @Test
     void airFluidLeavesAndReplaceablePlantsAreNotSurfaceSupport() {
         assertFalse(TerrainColumnPolicy.isSurfaceSupport(TerrainColumnPolicy.StateKind.AIR));
         assertFalse(TerrainColumnPolicy.isSurfaceSupport(TerrainColumnPolicy.StateKind.FLUID));

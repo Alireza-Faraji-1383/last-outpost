@@ -34,7 +34,10 @@ public final class TerrainPreparationService {
         int highest = level.getMinBuildHeight();
         for (int x = poi.x(); x <= poi.maxX(); x++) {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
-                highest = Math.max(highest, level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) - 1);
+                // Level.getHeight returns minBuildHeight when hasChunk is false.
+                // Prepared remote chunks need not remain loaded between ticks.
+                var chunk = level.getChunk(x >> 4, z >> 4);
+                highest = Math.max(highest, chunk.getHeight(Heightmap.Types.WORLD_SURFACE, x & 15, z & 15));
             }
         }
         final int initialCeiling = highest;
@@ -83,11 +86,12 @@ public final class TerrainPreparationService {
             for (int z = poi.z(); z <= poi.maxZ(); z++) {
                 int columnX = x;
                 int columnZ = z;
-                int firstCandidate = Math.min(ceilingY, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1);
-                int oceanFloorCandidate = Math.min(ceilingY, level.getHeight(Heightmap.Types.OCEAN_FLOOR, x, z) - 1);
+                var chunk = level.getChunk(x >> 4, z >> 4);
+                int firstCandidate = Math.min(ceilingY, chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15));
+                int oceanFloorCandidate = Math.min(ceilingY, chunk.getHeight(Heightmap.Types.OCEAN_FLOOR, x & 15, z & 15));
                 Integer support = TerrainColumnPolicy.findSurfaceSupportY(
                         y -> {
-                            var kind = TerrainColumnPolicy.classify(level.getBlockState(cursor.set(columnX, y, columnZ)));
+                            var kind = TerrainColumnPolicy.classify(chunk.getBlockState(cursor.set(columnX, y, columnZ)));
                             if (kind == TerrainColumnPolicy.StateKind.GLASS && encounteredGlass != null) {
                                 encounteredGlass.add(cursor.immutable());
                             }

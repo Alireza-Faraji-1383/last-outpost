@@ -8,6 +8,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class WastelandProfileDefinitionTest {
     @Test
+    void registersMissingProfileInLostCitiesRuntimeRegistryAndPreservesExistingProfile() {
+        var profiles = mcjty.lostcities.config.ProfileSetup.STANDARD_PROFILES;
+        var oldBase = profiles.put("wasteland", new mcjty.lostcities.config.LostCityProfile("wasteland", false));
+        var oldExodus = profiles.remove("exodus");
+        try {
+            WastelandProfileDefinition.ensureRuntimeProfile();
+            var registered = profiles.get("exodus");
+            org.junit.jupiter.api.Assertions.assertNotNull(registered);
+            WastelandProfileDefinition.ensureRuntimeProfile();
+            org.junit.jupiter.api.Assertions.assertSame(registered, profiles.get("exodus"));
+        } finally {
+            profiles.remove("exodus");
+            profiles.remove("wasteland");
+            if (oldBase != null) profiles.put("wasteland", oldBase);
+            if (oldExodus != null) profiles.put("exodus", oldExodus);
+        }
+    }
+    @Test
     void usesWastelandWithDefaultLandscape() {
         assertEquals("wasteland", WastelandProfileDefinition.BASE_PROFILE);
         assertEquals("default", WastelandProfileDefinition.LANDSCAPE_TYPE);

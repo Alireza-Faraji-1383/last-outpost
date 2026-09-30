@@ -2,7 +2,6 @@ package dev.exodus.wasteland.lostcities;
 
 import dev.exodus.wasteland.profile.WastelandProfileDefinition;
 import mcjty.lostcities.api.ILostCities;
-import mcjty.lostcities.api.ILostCitiesPre;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -20,11 +19,6 @@ public final class LostCitiesIntegration {
     private LostCitiesIntegration() {}
 
     public static void enqueue(InterModEnqueueEvent ignored) {
-        InterModComms.sendTo(ILostCities.LOSTCITIES, ILostCities.GET_LOST_CITIES_PRE,
-                () -> (Function<ILostCitiesPre, Void>) pre -> {
-                    pre.registerProfileSetupCallback(WastelandProfileDefinition::register);
-                    return null;
-                });
         InterModComms.sendTo(ILostCities.LOSTCITIES, ILostCities.GET_LOST_CITIES,
                 () -> (Function<ILostCities, Void>) api -> {
                     acceptApi(api);
@@ -37,6 +31,7 @@ public final class LostCitiesIntegration {
     }
 
     public static void registerDimensionAfterConfigsLoaded() {
+        WastelandProfileDefinition.ensureRuntimeProfile();
         LIFECYCLE.registerDimension(WASTELAND_DIMENSION, WastelandProfileDefinition.PROFILE_NAME);
     }
 
