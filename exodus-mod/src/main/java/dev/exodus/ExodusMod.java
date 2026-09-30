@@ -14,6 +14,7 @@ public final class ExodusMod {
     public static final String MOD_ID = "exodus";
 
     public ExodusMod() {
+        dev.exodus.network.ExodusNetwork.register();
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ExodusSupplyRegistry.register(modBus);
         ExodusTeleporterRegistry.register(modBus);

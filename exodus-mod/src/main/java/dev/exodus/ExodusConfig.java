@@ -99,7 +99,18 @@ public final class ExodusConfig {
         TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS=b.defineInRange("teleporterVictoryRadiusMilliblocks",5000,100,64000);
         TELEPORTER_CAPACITY=b.defineInRange("teleporterCapacity",2,1,8);
         b.pop();
+        b.push("matchDevices");
+        DISCOVERY_HORIZONTAL=b.defineInRange("discoveryHorizontalRadius",50,1,1024);
+        DISCOVERY_VERTICAL=b.defineInRange("discoveryVerticalRadius",20,1,384);
+        CLAIM_SECONDS=b.defineInRange("claimSeconds",20,1,600);
+        CLAIM_RADIUS=b.defineInRange("claimRadius",5,1,64);
+        SPAWN_EXCLUSION_RADIUS=b.defineInRange("spawnExclusionRadius",10,1,128);
+        PROTECTION_SECONDS=b.defineInRange("protectionSeconds",10,1,600);
+        DAY_TICKS=b.defineInRange("matchDayTicks",24000,20,2400000);
+        MAP_CITY_CHECKS=b.defineInRange("mapCityChecksPerTick",64,1,256);
+        b.pop();
         SPEC = b.build();
     }
     private ExodusConfig() {}
+    public static final ForgeConfigSpec.IntValue DISCOVERY_HORIZONTAL,DISCOVERY_VERTICAL,CLAIM_SECONDS,CLAIM_RADIUS,SPAWN_EXCLUSION_RADIUS,PROTECTION_SECONDS,DAY_TICKS,MAP_CITY_CHECKS;
 }

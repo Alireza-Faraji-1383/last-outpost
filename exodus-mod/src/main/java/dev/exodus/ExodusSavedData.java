@@ -27,6 +27,9 @@ public final class ExodusSavedData extends SavedData {
     public final List<String> placedCenters = new ArrayList<>();
     public TeleporterSavedState teleporter = new TeleporterSavedState();
     public ArenaRegistry arenas = new ArenaRegistry();
+    public dev.exodus.session.MatchSessionState session = new dev.exodus.session.MatchSessionState();
+    public long mapEpoch;
+    public final Map<UUID, List<String>> pendingNotices = new HashMap<>();
 
     public static ExodusSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(ExodusSavedData::load, ExodusSavedData::new, "exodus");
@@ -56,6 +59,9 @@ public final class ExodusSavedData extends SavedData {
         for(Tag raw:tag.getList("placedCenters",Tag.TAG_STRING)) d.placedCenters.add(raw.getAsString());
         if(tag.contains("teleporter",Tag.TAG_COMPOUND))d.teleporter=TeleporterSavedState.load(tag.getCompound("teleporter"));
         if(tag.contains("arenas",Tag.TAG_LIST))d.arenas=ArenaRegistry.load(tag.getList("arenas",Tag.TAG_COMPOUND));
+        d.session=dev.exodus.session.MatchSessionState.load(tag.getCompound("session"));
+        d.mapEpoch=tag.getLong("mapEpoch");
+        for(Tag raw:tag.getList("notices",Tag.TAG_COMPOUND)){CompoundTag n=(CompoundTag)raw;if(!n.hasUUID("player"))continue;List<String> lines=new ArrayList<>();for(Tag line:n.getList("lines",Tag.TAG_STRING))lines.add(line.getAsString());d.pendingNotices.put(n.getUUID("player"),lines);}
         return d;
     }
 
@@ -71,6 +77,8 @@ public final class ExodusSavedData extends SavedData {
         var old=new ListTag(); placedCenters.forEach(s->old.add(StringTag.valueOf(s)));tag.put("placedCenters",old);
         tag.put("teleporter",teleporter.save());
         tag.put("arenas",arenas.save());
+        tag.put("session",session.save());tag.putLong("mapEpoch",mapEpoch);
+        ListTag notices=new ListTag();pendingNotices.forEach((id,lines)->{CompoundTag n=new CompoundTag();n.putUUID("player",id);ListTag values=new ListTag();lines.forEach(line->values.add(StringTag.valueOf(line)));n.put("lines",values);notices.add(n);});tag.put("notices",notices);
         return tag;
     }
     private static void putPos(CompoundTag t,String p,net.minecraft.core.BlockPos v){t.putInt(p+"x",v.getX());t.putInt(p+"y",v.getY());t.putInt(p+"z",v.getZ());}

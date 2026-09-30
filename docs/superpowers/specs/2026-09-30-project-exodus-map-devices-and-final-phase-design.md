@@ -2,7 +2,7 @@
 
 ## Intent and authorization
 
-Provide a personal JourneyMap view of the current match, an always-visible match boss bar, claimable public teleporters, device-based respawn, and permanent death elimination after the first teleporter activates. The user approved the decisions below through a one-question-at-a-time design interview and authorized recording this design. Implementation has not started.
+Provide a personal JourneyMap view of the current match, an always-visible match boss bar, claimable public teleporters, device-based respawn, and permanent death elimination after the first teleporter activates. The user approved the decisions below through a one-question-at-a-time design interview and authorized recording this design. Implementation is delivered in `codex/exodus-match-map`; real client and two-client acceptance remain pending. See the dated verification report.
 
 These explicitly approved additions extend the foundation scope with map UI, device ownership, respawn rules, temporary damage protection, and final-phase elimination. Do not extend them into teams, faction membership, new structures, other victory conditions, or unrelated combat rules. All product text and logs remain English.
 
@@ -51,7 +51,7 @@ Initial and automatic spectators see public information only. Spectator movement
 
 On successful match commit, set the match dimension's day time to 0 and initialize an independent elapsed-match tick counter. Preserve `gameTime`. Show `Day 1` immediately; advance the day every 24,000 elapsed server ticks. Do not reset the clock on failed preflight. This reset does not imply changing another dimension's time or introducing a day/night progression subsystem.
 
-Show a boss bar to associated online match users from RUNNING onward. Before activation, an active player's title is `Day N — Components: K/9`, with progress K/9. Count the union of distinct valid current-match component types in the player's inventory and a single owned device. With multiple owned devices, select the device yielding the largest union with that inventory; never combine installed components across devices. Inventory-only progress is valid when no device is owned. Duplicate components do not increase K. Ender Chest, ordinary chests, other players' inventories, and unowned devices do not count. Dropping or transferring a component can reduce progress.
+Show a boss bar to associated online match users from RUNNING onward. Before activation, an active player's title is `Day N â€” Components: K/9`, with progress K/9. Count the union of distinct valid current-match component types in the player's inventory and a single owned device. With multiple owned devices, select the device yielding the largest union with that inventory; never combine installed components across devices. Inventory-only progress is valid when no device is owned. Duplicate components do not increase K. Ender Chest, ordinary chests, other players' inventories, and unowned devices do not count. Dropping or transferring a component can reduce progress.
 
 Spectators see only `Day N` with an empty bar before activation. Once the first device activates, all associated viewers see the day and public teleporter countdown, and the bar displays countdown progress. Preserve the existing public coordinate information alongside the countdown and the configured countdown/radius/capacity captured at activation.
 

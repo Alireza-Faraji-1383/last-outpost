@@ -7,6 +7,13 @@ import dev.exodus.wasteland.arena.*;
 import java.util.UUID;
 
 class ExodusSavedDataTest {
+    @Test void ownershipNoticeSurvivesSessionCleanupAndDeliversOnce(){
+        ExodusSavedData data=new ExodusSavedData();UUID player=UUID.randomUUID();
+        data.pendingNotices.put(player,new java.util.ArrayList<>(java.util.List.of("Device transferred.")));data.mapEpoch=3;
+        data.session=new dev.exodus.session.MatchSessionState();
+        ExodusSavedData loaded=ExodusSavedData.load(data.save(new CompoundTag()));
+        assertEquals(java.util.List.of("Device transferred."),loaded.pendingNotices.remove(player));assertNull(loaded.pendingNotices.remove(player));assertEquals(3,loaded.mapEpoch);
+    }
     @Test void pendingOfflineReturnRoundTripsExactlyOnce(){
         ExodusSavedData original=new ExodusSavedData();
         UUID player=UUID.randomUUID();

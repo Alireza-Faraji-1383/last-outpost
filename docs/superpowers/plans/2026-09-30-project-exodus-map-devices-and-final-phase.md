@@ -10,6 +10,12 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-30-project-exodus-map-devices-and-final-phase-design.md`
 
+## Execution status
+
+Tasks 1–7 are implemented in `codex/exodus-match-map`. Task 8 automated gates, isolated dedicated-server lifecycle/packet/permission smoke, review, package inspection and runtime delivery are complete. Real client/two-client and full restart/offline acceptance remain pending; see `docs/verification/2026-09-30-map-devices-final-phase.md`. Unchecked detailed validation steps are not represented as observed.
+
+Implementation uses an epoch plus runtime revision, mutable persisted server aggregate fields, a pure projection policy plus explicit role gate, and bounded loaded-chunk block-entity scans. Final-phase activation denies even a delayed pre-final death-screen respawn, following the user's global no-respawn rule. Pending targets are rewritten on ownership loss; respawn events link the replacement to the connection before teleport.
+
 ## Global Constraints
 
 - All product text, logs, code, and documentation are English.
@@ -79,9 +85,9 @@ Define all listed contracts before consumers use them; constructors validate non
 ```
 
 - [ ] Run `./gradlew.bat test --tests '*MatchClockPolicyTest' --tests '*ExodusSavedDataTest'` and confirm a missing-contract failure before implementing.
-- [ ] Implement day calculation `1 + elapsedTicks / dayTicks`; reject negative elapsed time or nonpositive day length. Add session NBT with schema version, roster/eliminations, exact arena identity, device index, selected spawns, discoveries, protection deadlines, and monotonic projection revision. Keep pending notifications separately so match cleanup cannot delete undelivered notices.
-- [ ] Inspect installed API classes with `javap` before selecting coordinates. The embedded API is `META-INF/jarjar/journeymap-api-forge-1.20.1-2.0.0.jar`; extract it to the build directory using a Gradle task, or resolve the exact matching published artifact. Use ForgeGradle deobfuscation where required, and verify the resulting runtime JAR does not contain JourneyMap classes. Add no external mod to `mods/`.
-- [ ] Compile an adapter against verified signatures: `@JourneyMapPlugin(apiVersion="2.0.0")`, `IClientPlugin.initialize(IClientAPI)`, `getModId()`, `IClientAPI.show(Displayable)`, `remove(Displayable)`, `removeAll(String)`. Verify default annotation parameters and `Context.UI` constants by `javap`, not guesswork.
+- [x] Implement day calculation `1 + elapsedTicks / dayTicks`; reject negative elapsed time or nonpositive day length. Add session NBT with schema version, roster/eliminations, exact arena identity, device index, selected spawns, discoveries, protection deadlines, and monotonic projection revision. Keep pending notifications separately so match cleanup cannot delete undelivered notices.
+- [x] Inspect installed API classes with `javap` before selecting coordinates. The embedded API is `META-INF/jarjar/journeymap-api-forge-1.20.1-2.0.0.jar`; extract it to the build directory using a Gradle task, or resolve the exact matching published artifact. Use ForgeGradle deobfuscation where required, and verify the resulting runtime JAR does not contain JourneyMap classes. Add no external mod to `mods/`.
+- [x] Compile an adapter against verified signatures: `@JourneyMapPlugin(apiVersion="2.0.0")`, `IClientPlugin.initialize(IClientAPI)`, `getModId()`, `IClientAPI.show(Displayable)`, `remove(Displayable)`, `removeAll(String)`. Verify default annotation parameters and `Context.UI` constants by `javap`, not guesswork.
 - [ ] Run the focused tests and `./gradlew.bat compileJava`. Record the dependency choice and actual radar permission path in the implementation notes.
 
 ### Task 2: Exact arena locations and committed device registration
@@ -93,9 +99,9 @@ Define all listed contracts before consumers use them; constructors validate non
 
 - [ ] Write a failing test constructing two arena records with distinct centers; assert a catalog requested for the older consumed arena never uses newer coordinates. Test composite faction parts produce one base marker rather than one marker per part. Test original-base devices keep protected owners on index reload.
 - [ ] Run `./gradlew.bat test --tests '*ArenaMapCatalogTest' --tests '*DeviceIndexTest'` and confirm failure.
-- [ ] Add an explicit-arena location helper rather than use the latest-record helper. Persist a canonical location snapshot at successful commit. City marker center comes from the verified fixed-city manifest when that feature is present; otherwise resolve real center data from installed Lost Cities API. Do not implement fixed-city generation or assume center offsets for legacy arenas. Record a real center before publishing `City`.
+- [x] Add an explicit-arena location helper rather than use the latest-record helper. Persist a canonical location snapshot at successful commit. City marker center comes from the verified fixed-city manifest when that feature is present; otherwise resolve real center data from installed Lost Cities API. Do not implement fixed-city generation or assume center offsets for legacy arenas. Record a real center before publishing `City`.
 - [ ] Register devices while actual structure blocks are placed and during chunk/block-entity load reconciliation. Register starter-base devices with their committed owner before exposing RUNNING. Limit any reconciliation scan to known structure bounds, not arbitrary world chunks. Device indexing does not add or relocate structure blocks.
-- [ ] Reconcile component masks on mutation and block-entity load. Use immutable `DeviceRecord` replacement keyed by current match/dimension/position. Verify unload keeps the last valid server-owned inventory mask; verified removal removes the record and discovery marker.
+- [x] Reconcile component masks on mutation and block-entity load. Use immutable `DeviceRecord` replacement keyed by current match/dimension/position. Verify unload keeps the last valid server-owned inventory mask; verified removal removes the record and discovery marker.
 - [ ] Run focused tests and compile. Inspect a prepared structure location listing against the catalog without modifying the existing save.
 
 ### Task 3: Personal component progress, match clock, and unified boss bar
@@ -154,11 +160,11 @@ Add stale-match exclusion at inventory-to-mask conversion, inventory-only counti
 }
 ```
 
-- [ ] Verify Forge event signatures from mapped 1.20.1 sources: death, player recreation/respawn, sleeping, spawn-setting, incoming attacks/hurt, and projectile/player attribution. Select the device target at death before vanilla dimension/spawn resolution; do not simply teleport after an incorrect cross-dimension respawn.
-- [ ] Implement respawn exactly above the chosen device, with default protected original target and a per-death occupancy fallback. Enforce usable headroom during match interaction; do not equate indestructibility with air above. Reject placements/fluids that obstruct reserved respawn headroom, and safely clear any already-obstructed reserved spawn cells when resolving a respawn, without deleting the device.
+- [x] Verify Forge event signatures from mapped 1.20.1 sources: death, player recreation/respawn, sleeping, spawn-setting, incoming attacks/hurt, and projectile/player attribution. Select the device target at death before vanilla dimension/spawn resolution; do not simply teleport after an incorrect cross-dimension respawn.
+- [x] Implement respawn exactly above the chosen device, with default protected original target and a per-death occupancy fallback. Enforce usable headroom during match interaction; do not equate indestructibility with air above. Reject placements/fluids that obstruct reserved respawn headroom, and safely clear any already-obstructed reserved spawn cells when resolving a respawn, without deleting the device.
 - [ ] Block sleeping and bed/anchor spawn changes only for associated match users while RUNNING; preserve ordinary-world behavior. Use an internal service guard so these events do not reject Exodus's own intentional spawn assignment/reset.
-- [ ] Apply protection at commit and playable respawn; cancel all incoming damage and player-attributed damage to others while protection is active. Check both attacker and victim deadlines at impact; projectiles do not retain a permanent protection tag after the deadline. Death-to-spectator recreation receives no playable protection.
-- [ ] Keep deadlines on server session state across logout/recreation; login never grants a new window. Run tests and compile, including direct, projectile, explosion-attributed, and environmental damage cases.
+- [x] Apply protection at commit and playable respawn; cancel all incoming damage and player-attributed damage to others while protection is active. Check both attacker and victim deadlines at impact; projectiles do not retain a permanent protection tag after the deadline. Death-to-spectator recreation receives no playable protection.
+- [x] Keep deadlines on server session state across logout/recreation; login never grants a new window. Run tests and compile, including direct, projectile, explosion-attributed, and environmental damage cases.
 
 ### Task 6: Permanent final-phase elimination and complete lifecycle cleanup
 
@@ -180,9 +186,9 @@ Add stale-match exclusion at inventory-to-mask conversion, inventory-only counti
 
 Also test sole-survivor non-victory, pending return, eliminated reconnect, duplicate death delivery, and death coinciding with activation. Use server-thread event order: deaths before activation use pre-final respawn; deaths after committed activation eliminate.
 
-- [ ] Preserve the immutable original roster even when grace expiry changes/removes active associations. Elimination removes grace eligibility, keeps spectator association for cleanup/map audience, cancels claiming, and persists before player recreation. Login and dimension events cannot reinstate an eliminated participant.
-- [ ] Trigger immediate no-winner ending only for all-dead roster. Keep existing no-active/no-pending and countdown-no-winner endings distinct. Do not award victory because only one player remains.
-- [ ] Centralize cleanup called by end/stop/failed commit/recovery: release bars, claims, protection, overlays, devices and session-private state; reset respawn to current Overworld spawn online or once on next login. Preserve placed structures, arena history, personal JourneyMap waypoints, and undelivered owner notices.
+- [x] Preserve the immutable original roster even when grace expiry changes/removes active associations. Elimination removes grace eligibility, keeps spectator association for cleanup/map audience, cancels claiming, and persists before player recreation. Login and dimension events cannot reinstate an eliminated participant.
+- [x] Trigger immediate no-winner ending only for all-dead roster. Keep existing no-active/no-pending and countdown-no-winner endings distinct. Do not award victory because only one player remains.
+- [x] Centralize cleanup called by end/stop/failed commit/recovery: release bars, claims, protection, overlays, devices and session-private state; reset respawn to current Overworld spawn online or once on next login. Preserve placed structures, arena history, personal JourneyMap waypoints, and undelivered owner notices.
 - [ ] Run policy and persistence tests; simulate save/restart of final-phase state and confirm recovery to IDLE rather than resumption.
 
 ### Task 7: Recipient projections, discovery, dropped items, and JourneyMap rendering
@@ -193,30 +199,30 @@ Also test sole-survivor non-victory, pending return, eliminated reconnect, dupli
 **Produces:** `MapProjectionPolicy.project(UUID viewer, boolean active, Set<String> discovered, List<MapLocation> publicLocations, List<MapLocation> privateLocations)`; `MatchMapService.tick(MinecraftServer)` / `clear(MinecraftServer)`; `JourneyMapAdapter.apply(MatchMapSnapshot)`.
 
 - [ ] Write failing discovery tests at horizontal 50 and vertical 20 boundaries, diagonal horizontal distance, deep tunnels, and spectator exclusion. Write privacy tests proving an undiscovered private location never enters a snapshot and an eliminated player retains only previous discoveries/owned data.
-- [ ] Add snapshot decode bounds, revision/match identity, disconnect clearing, and delayed prior-session packet tests. Protect session establishment with an explicit ordered reset/epoch packet before incremental snapshots; UUID comparison alone cannot decide which different match is newer.
-- [ ] Implement map projections server-side. Update discovering eligible players on a bounded tick schedule; keep markers when they leave range. Track rare item entity lifecycle by UUID and current match, sending live positions while ground item entities exist; remove on pickup/discard/unload and re-publish only on verified entity load. Do not force-load unloaded item chunks.
-- [ ] Implement one Forge SimpleChannel registered during mod initialization, using S2C map snapshots with recipient delivery and bounded payloads. Register client handlers through a client-only bridge; decode types contain no JourneyMap/client references. Send no original private catalog to clients.
-- [ ] Implement API v2 client markers using verified `MarkerOverlay`, `MapImage`, and `Overlay.setActiveUIs(...)`. Use stable Exodus IDs, typed icon colors, anonymous discovered labels, and a prominent active-device marker. Build the red border polygon and a translucent exterior polygon with a zone hole over the finite arena mapping extent. Use `IClientAPI.removeAll("exodus")` only for Exodus-owned overlays; never delete ordinary waypoint data. Reconcile equal snapshots without recreating unchanged overlays.
+- [x] Add snapshot decode bounds, revision/match identity, disconnect clearing, and delayed prior-session packet tests. Protect session establishment with an explicit ordered reset/epoch packet before incremental snapshots; UUID comparison alone cannot decide which different match is newer.
+- [x] Implement map projections server-side. Update discovering eligible players on a bounded tick schedule; keep markers when they leave range. Track rare item entity lifecycle by UUID and current match, sending live positions while ground item entities exist; remove on pickup/discard/unload and re-publish only on verified entity load. Do not force-load unloaded item chunks.
+- [x] Implement one Forge SimpleChannel registered during mod initialization, using S2C map snapshots with recipient delivery and bounded payloads. Register client handlers through a client-only bridge; decode types contain no JourneyMap/client references. Send no original private catalog to clients.
+- [x] Implement API v2 client markers using verified `MarkerOverlay`, `MapImage`, and `Overlay.setActiveUIs(...)`. Use stable Exodus IDs, typed icon colors, anonymous discovered labels, and a prominent active-device marker. Build the red border polygon and a translucent exterior polygon with a zone hole over the finite arena mapping extent. Use `IClientAPI.removeAll("exodus")` only for Exodus-owned overlays; never delete ordinary waypoint data. Reconcile equal snapshots without recreating unchanged overlays.
 - [ ] Verify normal and expanded radar permission evaluation using installed JourneyMap bytecode/source. Set dimension-level `playerRadarEnabled=false` and name radar false, apply global/operator paths if necessary, and send refreshed permissions through verified `PermissionsManager.sendPermissions(ServerPlayer)`. Preserve unrelated map options. Tests must include operator and reconnect paths, not only non-op normal radar.
-- [ ] On stop/reset/disconnect release client overlays; on reconnect deliver a fresh authorized snapshot. If JourneyMap is missing, log a clear optional-integration warning while keeping game lifecycle functional. Run map tests and compile the dedicated-server path.
+- [x] On stop/reset/disconnect release client overlays; on reconnect deliver a fresh authorized snapshot. If JourneyMap is missing, log a clear optional-integration warning while keeping game lifecycle functional. Run map tests and compile the dedicated-server path.
 
 ### Task 8: Full verification, package inspection, and manual acceptance handoff
 
 **Files:** Modify this plan's checkboxes; create `docs/verification/2026-09-30-map-devices-final-phase.md` containing actual evidence and remaining manual checks.
 
-**Consumes:** Completed Tasks 1–7 and the approved design.
+**Consumes:** Completed Tasks 1â€“7 and the approved design.
 **Produces:** Tested Exodus runtime artifact and honest verification report.
 
-- [ ] Run `./gradlew.bat test build` in `exodus-mod`; inspect all output and resolve failures before repeating only affected tests and final gate.
-- [ ] Inspect the built JAR for map icons, mod metadata, network classes, and absence of embedded JourneyMap mod/API copies. Verify no accidental third-party mod changes or world modifications in the diff.
+- [x] Run `./gradlew.bat test build` in `exodus-mod`; inspect all output and resolve failures before repeating only affected tests and final gate.
+- [x] Inspect the built JAR for map icons, mod metadata, network classes, and absence of embedded JourneyMap mod/API copies. Verify no accidental third-party mod changes or world modifications in the diff.
 - [ ] Run a fresh test-world dedicated-server smoke with installed Forge/JourneyMap: arena identity, one active destination, claims, offline notices, death/grace distinctions, stop/restart cleanup, and saved border/respawn reset. Record precise commands and observed results.
 - [ ] Run a real client check for personal markers, fogged terrain, zone overlay, rare-item movement/pickup, two buttons, action bar, permanent boss bar, respawn above devices, obstruction handling, and radar settings. A one-client check cannot prove cross-player privacy or multiplayer outcomes.
-- [ ] Review the whole diff against the spec, emphasizing no hidden-location packets, no active-owner race, unchanged winner proximity, no rejoin bypass, and persistent offline cleanup. Use independent review only if the user chooses/authorizes delegation; otherwise review inline.
-- [ ] Install only the newly built Exodus JAR in `mods/` when its implementation checkout is ready for user testing; retain third-party mods. Do not claim a launched game loaded the replacement until a fresh launch confirms it. Do not merge/commit to main without explicit authorization.
-- [ ] Give the user a concise two-client checklist: independently discover a camp; claim/steal a public device; confirm protected base rejection; choose/contest spawn; test 10-second damage symmetry; activate; die and reconnect as spectator; confirm sole survivor still needs teleport; all-dead ending; stop and verify world-spawn reset. Label these pending until the user's report.
+- [x] Review the whole diff against the spec, emphasizing no hidden-location packets, no active-owner race, unchanged winner proximity, no rejoin bypass, and persistent offline cleanup. Use independent review only if the user chooses/authorizes delegation; otherwise review inline.
+- [x] Install only the newly built Exodus JAR in `mods/` when its implementation checkout is ready for user testing; retain third-party mods. Do not claim a launched game loaded the replacement until a fresh launch confirms it. Do not merge/commit to main without explicit authorization.
+- [x] Give the user a concise two-client checklist: independently discover a camp; claim/steal a public device; confirm protected base rejection; choose/contest spawn; test 10-second damage symmetry; activate; die and reconnect as spectator; confirm sole survivor still needs teleport; all-dead ending; stop and verify world-spawn reset. Label these pending until the user's report.
 
 ## Plan self-review and execution handoff
 
-All design sections map to Tasks 1–8. The fixed-city generation feature remains separate; this work consumes its verified center when available. Actual JourneyMap 6.0.6 inspection confirmed embedded API 2.0.0, client overlays, per-player server waypoints, server polygons, and dimension permission fields. Do not confuse the server polygon-only overlay API with the client marker API.
+All design sections map to Tasks 1â€“8. The fixed-city generation feature remains separate; this work consumes its verified center when available. Actual JourneyMap 6.0.6 inspection confirmed embedded API 2.0.0, client overlays, per-player server waypoints, server polygons, and dimension permission fields. Do not confuse the server polygon-only overlay API with the client marker API.
 
 Recommended execution is native in an isolated worktree because the services share session/device interfaces and one authoritative lifecycle. Preserve the user's approval of the design; the next gate is review of this concrete plan and selection of native versus delegated execution, as required by the invoked writing-plans skill.

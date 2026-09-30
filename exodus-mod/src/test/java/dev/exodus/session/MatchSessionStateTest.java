@@ -1,0 +1,6 @@
+package dev.exodus.session;
+import dev.exodus.device.DeviceRecord;import net.minecraft.nbt.CompoundTag;import java.util.*;import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;
+class MatchSessionStateTest {
+ @Test void ownershipEliminationAndDiscoveryRoundTrip(){MatchSessionState s=new MatchSessionState();s.matchId=UUID.randomUUID();s.arenaId=UUID.randomUUID();UUID p=UUID.randomUUID();s.roster.add(p);s.eliminated.add(p);s.elapsedTicks=80;s.devices.put(42L,new DeviceRecord(s.matchId,"lostcities:lostcity",42,p,p,3,false));s.selectedSpawns.put(p,42L);s.discovered.put(p,new HashSet<>(Set.of("camp")));s.protectedUntil.put(p,200L);s.pendingRespawns.put(p,84L);s.baseMarkerIds.put(p,UUID.randomUUID());MatchSessionState r=MatchSessionState.load(s.save());assertEquals(s.matchId,r.matchId);assertEquals(s.arenaId,r.arenaId);assertTrue(r.eliminated.contains(p));assertEquals(3,r.devices.get(42L).componentMask());assertEquals(Set.of("camp"),r.discovered.get(p));assertEquals(42L,r.selectedSpawns.get(p));assertEquals(200L,r.protectedUntil.get(p));assertEquals(84L,r.pendingRespawns.get(p));assertEquals(s.baseMarkerIds.get(p),r.baseMarkerIds.get(p));}
+ @Test void legacyEmptyIsIdle(){assertNull(MatchSessionState.load(new CompoundTag()).matchId);}
+}

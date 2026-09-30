@@ -1,0 +1,6 @@
+package dev.exodus.network;
+import dev.exodus.map.*;import io.netty.buffer.Unpooled;import net.minecraft.network.FriendlyByteBuf;import java.util.*;import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;
+class MatchMapPacketTest {
+ @Test void authorizedSnapshotRoundTripsWithoutExtraLocations(){var source=new MatchMapSnapshot(2,3,UUID.randomUUID(),"lostcities:lostcity",20,-30,2000,false,List.of(new MapLocation("city","City",MapLocation.Kind.CITY,12,64,15)));FriendlyByteBuf buffer=new FriendlyByteBuf(Unpooled.buffer());try{MatchMapPacket.encode(source,buffer);assertEquals(source,MatchMapPacket.decode(buffer));assertEquals(0,buffer.readableBytes());}finally{buffer.release();}}
+ @Test void excessiveLocationCountIsRejectedBeforeAllocation(){FriendlyByteBuf b=new FriendlyByteBuf(Unpooled.buffer());try{b.writeLong(2);b.writeLong(3);b.writeBoolean(false);b.writeUtf("");b.writeInt(0);b.writeInt(0);b.writeInt(0);b.writeBoolean(true);b.writeVarInt(1025);assertThrows(IllegalArgumentException.class,()->MatchMapPacket.decode(b));}finally{b.release();}}
+}

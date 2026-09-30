@@ -13,5 +13,5 @@ public final class ExodusTeleporterBlockEntity extends RandomizableContainerBloc
  @Override public int[] getSlotsForFace(Direction side){return new int[0];}@Override public boolean canPlaceItemThroughFace(int slot,ItemStack stack,Direction side){return false;}@Override public boolean canTakeItemThroughFace(int slot,ItemStack stack,Direction side){return false;}
  @Override protected void saveAdditional(CompoundTag tag){super.saveAdditional(tag);ContainerHelper.saveAllItems(tag,items);if(matchId!=null)tag.putUUID("matchId",matchId);tag.putBoolean("locked",locked);}
  @Override public void load(CompoundTag tag){super.load(tag);items=NonNullList.withSize(9,ItemStack.EMPTY);ContainerHelper.loadAllItems(tag,items);matchId=tag.hasUUID("matchId")?tag.getUUID("matchId"):null;locked=tag.getBoolean("locked");}
- public static void tick(net.minecraft.server.level.ServerLevel level,BlockPos pos,BlockState state,ExodusTeleporterBlockEntity be){if(!be.locked&&be.installed()==9)TeleporterService.tryActivate(level,pos,be);}
+ public static void tick(net.minecraft.server.level.ServerLevel level,BlockPos pos,BlockState state,ExodusTeleporterBlockEntity be){dev.exodus.device.DeviceIndex.observe(be);if(!be.locked&&be.installed()==9)TeleporterService.tryActivate(level,pos,be);}
 }

@@ -58,6 +58,13 @@ public final class ArenaPreparationService {
     public static List<ArenaLocation> locations(MinecraftServer server) {
         return locationCatalog(server).locations();
     }
+    public static List<ArenaLocation> locations(MinecraftServer server, UUID arenaId) {
+        return ExodusSavedData.get(server).arenas.records().stream().filter(a->a.id().equals(arenaId))
+            .findFirst().map(a->locations(a)).orElse(List.of());
+    }
+    public static List<ArenaLocation> locations(ArenaRecord arena) {
+        return ArenaLocationCatalog.from(placements(arena),arena.checkpoint().placementY).locations();
+    }
 
     public static List<String> locationIds(MinecraftServer server) {
         return locationCatalog(server).ids();
