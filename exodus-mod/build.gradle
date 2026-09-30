@@ -103,7 +103,7 @@ minecraft {
                 property 'mixin.env.remapRefMap', 'true'
                 property 'mixin.env.refMapRemappingFile', file('build/createSrgToMcp/output.srg').absolutePath
             }
-            property 'forge.enabledGameTestNamespaces', mod_id
+            property 'forge.enabledGameTestNamespaces', project.findProperty('gameTestNamespaces') ?: mod_id
         }
 
         data {

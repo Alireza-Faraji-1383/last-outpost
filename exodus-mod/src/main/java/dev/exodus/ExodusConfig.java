@@ -7,6 +7,17 @@ public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.IntValue ENEMY_AMMO_MIN, ENEMY_AMMO_MAX, ENEMY_EMERALD_MIN, ENEMY_EMERALD_MAX;
     public static final ForgeConfigSpec.DoubleValue ENEMY_EMERALD_CHANCE;
+    public static final ForgeConfigSpec.IntValue ENEMY_PLAYER_CAP, ENEMY_GLOBAL_CAP,
+            ZOMBIE_DAY_TARGET, ZOMBIE_NIGHT_TARGET, ENEMY_SPAWN_INTERVAL_SECONDS,
+            ZOMBIE_BATCH, DEVICE_ZOMBIE_BATCH, ZOMBIE_SPAWN_MIN, ZOMBIE_SPAWN_MAX,
+            SOLDIER_SPAWN_MIN, SOLDIER_SPAWN_MAX, SOLDIER_GROUP_SIZE, SOLDIER_SCHEDULE_WINDOW,
+            ENEMY_PLACEMENT_ATTEMPTS, ENEMY_CANDIDATES_PER_TICK, ENEMY_WORK_PER_TICK,
+            ENEMY_AI_INTERVAL_TICKS, ENEMY_CLEANUP_RADIUS, ENEMY_CLEANUP_SECONDS,
+            ENEMY_DEVICE_RADIUS, ZOMBIE_PLAYER_ACQUIRE, ZOMBIE_PLAYER_RELEASE,
+            ZOMBIE_SOLDIER_ACQUIRE, ZOMBIE_SOLDIER_RELEASE, ZOMBIE_DOOR_BREAK_TICKS,
+            ENEMY_NAVIGATION_STEP, SOLDIER_GROUP_SPREAD, ENEMY_TARGET_SCANS_PER_TICK, ENEMY_NAVIGATION_PER_TICK;
+    public static final ForgeConfigSpec.DoubleValue ZOMBIE_EMERALD_CHANCE, ZOMBIE_GUNPOWDER_CHANCE,
+            ZOMBIE_QUARTZ_CHANCE, ENEMY_DEVICE_MOVEMENT_SPEED;
     public static final ForgeConfigSpec.IntValue BASIC_RADIO_COOLDOWN_SECONDS, SPECIAL_RADIO_COOLDOWN_SECONDS;
     public static final ForgeConfigSpec.IntValue MATCH_RADIUS, BORDER_SIZE, BASE_MIN_DISTANCE,
             BORDER_SAFE_DISTANCE, MAX_LOCATION_ATTEMPTS, MAX_ALLOCATION_ROUNDS, MAX_RANDOM_CENTER_ATTEMPTS,
@@ -35,6 +46,41 @@ public final class ExodusConfig {
         ENEMY_EMERALD_MIN=b.defineInRange("emeraldMinimum",1,1,64);
         ENEMY_EMERALD_MAX=b.defineInRange("emeraldMaximum",3,1,64);
         ENEMY_EMERALD_CHANCE=b.defineInRange("emeraldChance",.10,0.0,1.0);
+        b.pop();
+        b.push("enemySpawning");
+        ENEMY_PLAYER_CAP=b.defineInRange("perPlayerCap",30,1,1000);
+        ENEMY_GLOBAL_CAP=b.defineInRange("globalCap",200,1,2000);
+        ZOMBIE_DAY_TARGET=b.defineInRange("dayZombieTarget",12,0,1000);
+        ZOMBIE_NIGHT_TARGET=b.defineInRange("nightZombieTarget",24,0,1000);
+        ENEMY_SPAWN_INTERVAL_SECONDS=b.defineInRange("spawnIntervalSeconds",5,1,3600);
+        ZOMBIE_BATCH=b.defineInRange("zombieBatch",2,1,100);
+        DEVICE_ZOMBIE_BATCH=b.defineInRange("deviceZombieBatch",4,1,100);
+        ZOMBIE_SPAWN_MIN=b.defineInRange("zombieSpawnMinimum",32,1,512);
+        ZOMBIE_SPAWN_MAX=b.defineInRange("zombieSpawnMaximum",80,1,512);
+        SOLDIER_SPAWN_MIN=b.defineInRange("soldierSpawnMinimum",90,1,512);
+        SOLDIER_SPAWN_MAX=b.defineInRange("soldierSpawnMaximum",110,1,512);
+        SOLDIER_GROUP_SIZE=b.defineInRange("soldierGroupSize",3,1,20);
+        SOLDIER_GROUP_SPREAD=b.defineInRange("soldierGroupSpread",4,1,16);
+        SOLDIER_SCHEDULE_WINDOW=b.comment("Random offset within each 6000-tick daytime half.").defineInRange("soldierScheduleWindowTicks",3000,1,5999);
+        ENEMY_PLACEMENT_ATTEMPTS=b.defineInRange("placementAttemptsPerEnemy",8,1,128);
+        ENEMY_CANDIDATES_PER_TICK=b.defineInRange("placementCandidatesPerTick",24,1,256);
+        ENEMY_WORK_PER_TICK=b.defineInRange("entityMaintenancePerTick",8,1,256);
+        ENEMY_AI_INTERVAL_TICKS=b.defineInRange("targetAndNavigationIntervalTicks",20,5,200);
+        ENEMY_TARGET_SCANS_PER_TICK=b.defineInRange("targetScansPerTick",8,1,64);
+        ENEMY_NAVIGATION_PER_TICK=b.defineInRange("devicePathRequestsPerTick",4,1,32);
+        ENEMY_NAVIGATION_STEP=b.defineInRange("deviceNavigationStep",16,4,32);
+        ENEMY_CLEANUP_RADIUS=b.defineInRange("cleanupRadius",128,16,1024);
+        ENEMY_CLEANUP_SECONDS=b.defineInRange("cleanupDelaySeconds",30,1,3600);
+        ENEMY_DEVICE_RADIUS=b.defineInRange("deviceAttractionRadius",96,1,512);
+        ZOMBIE_PLAYER_ACQUIRE=b.defineInRange("zombiePlayerAcquireRadius",32,1,512);
+        ZOMBIE_PLAYER_RELEASE=b.defineInRange("zombiePlayerReleaseRadius",48,1,512);
+        ZOMBIE_SOLDIER_ACQUIRE=b.defineInRange("zombieSoldierAcquireRadius",10,1,128);
+        ZOMBIE_SOLDIER_RELEASE=b.defineInRange("zombieSoldierReleaseRadius",16,1,128);
+        ZOMBIE_DOOR_BREAK_TICKS=b.defineInRange("zombieDoorBreakTicks",240,240,2400);
+        ENEMY_DEVICE_MOVEMENT_SPEED=b.defineInRange("deviceMovementSpeed",1.0,.1,2.0);
+        ZOMBIE_EMERALD_CHANCE=b.defineInRange("zombieEmeraldChance",.01,0.0,1.0);
+        ZOMBIE_GUNPOWDER_CHANCE=b.defineInRange("zombieGunpowderChance",.03,0.0,1.0);
+        ZOMBIE_QUARTZ_CHANCE=b.defineInRange("zombieQuartzChance",.03,0.0,1.0);
         b.pop();
         b.push("foundation");
         MATCH_RADIUS = b.defineInRange("matchRadius", 1000, 128, 30000);
@@ -82,7 +128,7 @@ public final class ExodusConfig {
         MAX_SURFACE_CLEAR_DEPTH = b.comment("Maximum top-down clearing depth when a POI surface fails its quorum.")
                 .defineInRange("maxSurfaceClearDepth", 32, 0, 384);
         POI_CHUNKS_PER_TICK = b.defineInRange("poiChunksPerTick", 2, 1, 64);
-        NATURAL_HOSTILE_SPAWNS = b.define("naturalHostileSpawns", true);
+        NATURAL_HOSTILE_SPAWNS = b.comment("Legacy setting retained for compatibility. Controlled wasteland spawning always overrides it.").define("naturalHostileSpawns", false);
         b.pop();
         b.push("supplyDrops");
         BASIC_RADIO_COOLDOWN_SECONDS=b.defineInRange("basicRadioCooldownSeconds",30,0,86400);

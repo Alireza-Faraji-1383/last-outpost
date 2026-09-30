@@ -18,6 +18,7 @@ public final class ExodusMod {
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ExodusSupplyRegistry.register(modBus);
         ExodusTeleporterRegistry.register(modBus);
+        dev.exodus.enemy.EnemyRegistry.register(modBus);
         modBus.addListener(LostCitiesIntegration::enqueue);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ExodusConfig.SPEC, "exodus-common.toml");
         MinecraftForge.EVENT_BUS.register(ExodusEvents.class);

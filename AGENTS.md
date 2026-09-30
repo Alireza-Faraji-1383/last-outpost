@@ -12,6 +12,14 @@ Supply drops and the Exodus Teleporter victory flow are the approved exceptions 
 
 ## Agreed behavior
 
+Controlled enemy spawning is an additional approved foundation exception, specified in
+docs/superpowers/specs/2026-09-30-project-exodus-enemy-spawning-design.md.
+In the wasteland, automatic mob spawning is blocked outside the match-owned zombie and
+Russian/American soldier system. Preserve administrator test spawns. Each active player
+has an independent 30-enemy allocation, with a global cap of 200. Keep pressure rules
+separate from placement/lifecycle for future difficulty changes; implement only the
+approved zombie/soldier behavior. Real multiplayer performance remains manual acceptance.
+
 - Only one global match may exist.
 - `/exodus start`, `/exodus start <x> <z>`, and `/exodus start random` require permission level 2 and a player command source.
 - `start` uses the executor's dimension. Nether and End are rejected; modded playable dimensions are allowed.

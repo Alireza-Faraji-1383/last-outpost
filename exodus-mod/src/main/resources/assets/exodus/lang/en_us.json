@@ -1,4 +1,5 @@
 {
+  "entity.exodus.zombie": "Zombie",
   "biome.exodus.dry_plains": "Dry Plains",
   "block.exodus.basic_supply_radio": "Basic Supply Radio",
   "block.exodus.special_supply_radio": "Special Supply Radio",
