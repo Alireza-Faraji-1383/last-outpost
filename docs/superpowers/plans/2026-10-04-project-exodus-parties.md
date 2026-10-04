@@ -1,0 +1,84 @@
+# Project Exodus Parties Implementation Plan
+
+> **For agentic workers:** Use superpowers:executing-plans inline. The user explicitly requested main development, integration, and commits without another worktree.
+
+**Goal:** Deliver voluntary match-owned two-player parties with delayed betrayal, shared distinct component progress, private teammate identification, and Manhunt failure on alliance.
+
+**Architecture:** A pure PartyState manages membership, invitations, and tick deadlines. PartyService validates Minecraft participation and emits notices and event callbacks. Existing recipient map snapshots carry only the recipient's teammate; existing combat and progress paths consult party authority.
+
+**Tech Stack:** Java 17, Minecraft 1.20.1, Forge 47.4.10, JUnit 5, JourneyMap 6.0.6 API 2.0.0.
+
+**Spec:** docs/superpowers/specs/2026-10-04-project-exodus-parties-design.md
+
+## Global Constraints
+
+- Work in main. Preserve all approved worktree features and current inventory/respawn/victory rules.
+- English text and logs. No third-party mod installations or removals.
+- Party limit two; default invite and betrayal duration 30 seconds. Capture deadlines at creation.
+- Full Gradle test/build before installing an unused version greater than 0.6.0.
+- Human two-client acceptance remains manual.
+
+## Review Focus
+
+- Permission inheritance: normal players can use party commands; start/stop/event/arena remain operator-only.
+- Failed invitation acceptance cannot remove existing membership or create extra members.
+- Departure deadlines are idempotent and continue across disconnects; spectators cannot receive private map positions.
+- Same-tick Manhunt alliance is resolved before timeout/death rewards; no stale winner can claim a reward.
+- Shared progress unions inventory types, not duplicate counts or separate device inventories.
+
+### Task 1: Recover approved worktree deliveries
+
+- [ ] Commit source and documents in outstanding fixed-cities/events worktrees, excluding generated logs/caches.
+- [ ] Merge into main preserving current fixes, loot, horses, finite city manifest, and installed event behavior; resolve conflicts by responsibility rather than version age alone.
+- [ ] Run full test/build on merged baseline. Commit integration and main-only workflow rule.
+
+### Task 2: Party authority and player commands
+
+**Files:** party/PartyState.java, PartyService.java, PartyCommands.java; ExodusCommands.java, ExodusConfig.java, MatchSessionService.java, MatchManager.java; party/PartyStateTest.java.
+
+**Interface:** `PartyState(UUID matchId)`; `create(UUID)`, `invite(UUID,UUID,long,long)`, `accept(UUID,UUID,long)`, `decline(UUID,UUID)`, `leave(UUID,long,long)`, `remove(UUID)`, `tick(long)`, `sameParty(UUID,UUID)`, `teammate(UUID)`. Transitions return explicit results for command feedback. `PartyService.sameParty(MinecraftServer,UUID,UUID)` is the shared authority for other modules.
+
+- [ ] Write tests and observe red for explicit acceptance, creator-only invites, capacity, concurrent invites, expiration, repeated leave, protection at tick 599 versus 600, match reset and final departure.
+- [ ] Implement pure transitions, then validate active players in Forge commands. Root `/exodus` is public but each existing administrative subtree retains permission level 2.
+- [ ] Add configuration defaults and lifecycle hooks before event/progress/map tick. Preserve membership during disconnect grace; remove permanently departed/eliminated members. Clear on start, stop, failed commit, recovery, server stop.
+- [ ] Run focused PartyState tests green.
+
+### Task 3: Combat and shared progress
+
+**Files:** party/PartyCombatEvents.java, party/PartyProgressService.java; session/MatchBossBarService.java; device/ComponentProgressPolicy.java; party/PartyProgressTest.java; gametest/PartyGameTests.java.
+
+- [ ] Write red tests for union `1 | 1 == 1`, `1 | 2 == 3`, invalid match components, and best progress across independent devices.
+- [ ] Resolve DamageSource attacker directly or through owned projectiles. Cancel friendly player damage at attack/hurt/damage boundaries, without cancelling environmental damage or self-damage. Inspect installed TacZ bytecode to confirm attribution and cancellation timing.
+- [ ] Scan both members' current inventories/cursor stacks and evaluate the pooled mask against each owned device separately. Keep active countdown unchanged.
+- [ ] Run progress tests green and add real server GameTest for melee/projectile-attributed damage, environmental damage and post-betrayal damage.
+
+### Task 4: Private teammate tags and moving map marker
+
+**Files:** map/MatchMapSnapshot.java, MatchMapService.java, MatchNameTagState.java; network/MatchMapPacket.java, ExodusNetwork.java; map/client/MatchNameTagClient.java, JourneyMapAdapter.java; map and network tests.
+
+- [ ] Write red tests for teammate-only tag visibility, stranger concealment, dimension mismatch, clear/disconnect, packet round-trip and recipient position filtering.
+- [ ] Include at most one teammate UUID in recipient snapshots and a TEAMMATE marker only for eligible co-located match players. Use configurable bounded refresh, remove immediately on membership/lifecycle change, and avoid public location lists.
+- [ ] Render teammate name in green using RenderNameTagEvent; show green JourneyMap marker using the existing overlay API. Bump protocol when changing packet layout.
+- [ ] Run privacy, projection, tag and network tests green; compile against installed API.
+
+### Task 5: Manhunt alliance failure
+
+**Files:** event/EventManager.java, event/domain/ObjectiveProgress.java, event/domain/ManhuntPartyPolicy.java; event tests, gametest/PartyGameTests.java.
+
+- [ ] Write red tests for pair selection excluding teammates, available players with no legal opponent, alliance before deadline/death, terminal FAILED with empty winners and rejected reward claims.
+- [ ] Choose from legal distinct ordered pairs, not an unchecked shuffled player list. Notify EventManager synchronously after successful party acceptance; fail affected Manhunts and clear sidebar through existing terminal lifecycle.
+- [ ] Keep a tick-time guard as defense and preserve other event outcomes/rewards.
+- [ ] Run focused event tests and real server GameTest for no emerald payout after alliance.
+
+### Task 6: Verify, install and commit
+
+- [ ] Run fresh-context whole-change review per executing-plans; address material findings with regression tests.
+- [ ] Bump to available version 0.7.0 and update VersionContractTest; distribution builders derive version from gradle.properties.
+- [ ] Run `gradlew.bat clean test build` with Java 17 and applicable Forge GameTests. Verify version/assets and JAR hash.
+- [ ] Back up the previous private Exodus JAR outside mods and install newly versioned JAR. Preserve third-party mods.
+- [ ] Write manual two-client steps and commit all source/docs on main, excluding generated logs/caches. Report commits and unverified client boundary.
+
+## Execution ledger
+
+- User instruction overrides default worktree and artifact-approval gates; execute on main continuously.
+- Fixed-city and event source were previously left outside main; integrate both before party changes, preserving newer terrain sampling and current balance.

@@ -22,7 +22,7 @@ public final class ArenaRegistry {
         ListTag list=new ListTag();
         for(ArenaRecord r:records){
             CompoundTag t=new CompoundTag();t.putUUID("id",r.id());t.putUUID("initiator",r.initiator());t.putLong("ordinal",r.ordinal());t.putLong("centerX",r.centerX());t.putLong("centerZ",r.centerZ());t.putInt("arenaSize",r.arenaSize());t.putInt("buffer",r.buffer());t.putString("state",r.state().name());t.putString("failure",r.failure());
-            PreparationCheckpoint c=r.checkpoint();t.putString("phase",c.phase.name());t.putInt("chunkCursor",c.chunkCursor);t.putInt("citySamples",c.citySamples);t.putInt("cityChunks",c.cityChunks);t.putInt("lastAnnouncedPercent",c.lastAnnouncedPercent);t.putBoolean("placementNeedsRevalidation",c.placementNeedsRevalidation);
+            PreparationCheckpoint c=r.checkpoint();t.putString("phase",c.phase.name());t.putInt("layoutVersion",c.layoutVersion);t.putInt("chunkCursor",c.chunkCursor);t.putInt("citySamples",c.citySamples);t.putInt("cityChunks",c.cityChunks);t.putInt("lastAnnouncedPercent",c.lastAnnouncedPercent);t.putBoolean("placementNeedsRevalidation",c.placementNeedsRevalidation);
             ListTag done=new ListTag();c.completedPlacements.forEach(v->done.add(StringTag.valueOf(v)));t.put("completedPlacements",done);
             CompoundTag elevations=new CompoundTag();c.placementY.forEach(elevations::putInt);t.put("placementY",elevations);
             CompoundTag poiStates=new CompoundTag();
@@ -38,7 +38,7 @@ public final class ArenaRegistry {
             try{state=ArenaState.valueOf(t.getString("state"));}catch(Exception e){state=ArenaState.FAILED;failure="Unknown persisted arena state";}
             ArenaRecord r=ArenaRecord.restore(t.getUUID("id"),t.getUUID("initiator"),t.getLong("ordinal"),t.getLong("centerX"),t.getLong("centerZ"),t.getInt("arenaSize"),t.getInt("buffer"),state,failure);PreparationCheckpoint c=r.checkpoint();
             try{c.phase=ArenaPhase.valueOf(t.getString("phase"));}catch(Exception e){c.phase=ArenaPhase.TEMPLATE_VALIDATION;c.placementNeedsRevalidation=true;}
-            c.chunkCursor=t.getInt("chunkCursor");c.citySamples=t.getInt("citySamples");c.cityChunks=t.getInt("cityChunks");c.lastAnnouncedPercent=t.getInt("lastAnnouncedPercent");c.placementNeedsRevalidation|=t.getBoolean("placementNeedsRevalidation");
+            c.layoutVersion=t.getInt("layoutVersion");c.chunkCursor=t.getInt("chunkCursor");c.citySamples=t.getInt("citySamples");c.cityChunks=t.getInt("cityChunks");c.lastAnnouncedPercent=t.getInt("lastAnnouncedPercent");c.placementNeedsRevalidation|=t.getBoolean("placementNeedsRevalidation");
             for(Tag value:t.getList("completedPlacements",Tag.TAG_STRING))c.completedPlacements.add(value.getAsString());
             CompoundTag elevations=t.getCompound("placementY");for(String key:elevations.getAllKeys())c.placementY.put(key,elevations.getInt(key));
             boolean hasPoiStates=t.contains("poiStates",Tag.TAG_COMPOUND)&&!t.getCompound("poiStates").getAllKeys().isEmpty();

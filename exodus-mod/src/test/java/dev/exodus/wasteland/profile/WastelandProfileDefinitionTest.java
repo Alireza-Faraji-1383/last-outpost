@@ -4,7 +4,7 @@ import mcjty.lostcities.api.ILostCityProfile;
 import mcjty.lostcities.api.ILostCityProfileSetup;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WastelandProfileDefinitionTest {
     @Test
@@ -40,10 +40,25 @@ class WastelandProfileDefinitionTest {
         assertEquals("exodus", setup.profileName);
         assertEquals("wasteland", setup.baseProfile);
         assertEquals("Project Exodus: medium-ruined competitive wasteland", setup.profile.description);
-        assertEquals(0.01, setup.profile.cityChance);
-        assertEquals(0.65f, setup.profile.ruinChance);
-        assertEquals(0.25f, setup.profile.minimumRuinLevel);
-        assertEquals(0.75f, setup.profile.maximumRuinLevel);
+        assertEquals(0.0, setup.profile.cityChance);
+        assertEquals(0.35f, setup.profile.ruinChance);
+        assertEquals(0.65f, setup.profile.minimumRuinLevel);
+        assertEquals(0.90f, setup.profile.maximumRuinLevel);
+    }
+
+    @Test void concreteProfileHasNoSpheresOrSpawnersAndKeepsLoot() {
+        var profile = new mcjty.lostcities.config.LostCityProfile("test", false);
+        WastelandProfileDefinition.configure(profile);
+        assertEquals(mcjty.lostcities.config.LandscapeType.DEFAULT, profile.LANDSCAPE_TYPE);
+        assertEquals(0, profile.CITYSPHERE_CHANCE);
+        assertEquals(0, profile.CITY_CHANCE);
+        assertFalse(profile.GENERATE_SPAWNERS);
+        assertTrue(profile.GENERATE_LOOT);
+        assertTrue(profile.CITY_MAXRADIUS >= FixedCityLayout.load().radius());
+        assertTrue(profile.CITY_MAXRADIUS > profile.CITY_MINRADIUS,
+                "Lost Cities sphere metadata calls nextInt(maxRadius-minRadius) even for disabled spheres");
+        assertEquals("exodus:wasteland", profile.getWorldStyle());
+        assertEquals(.2f, profile.CHEST_WITHOUT_LOOT_CHANCE);
     }
 
     private static final class RecordingSetup implements ILostCityProfileSetup {

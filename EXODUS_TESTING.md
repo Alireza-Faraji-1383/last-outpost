@@ -22,3 +22,7 @@ The `lostcities:lostcity` dimension now uses the isolated `exodus:dry_plains` bi
 Verify that the match dimension has rolling grass-covered terrain, dry caves, no natural water, and no vanilla structures, while Lost Cities buildings and Exodus bases/camps still appear. Water explicitly authored in a template or placed by a player is not removed. The normal Overworld, Nether, and End are unchanged.
 
 Automated dedicated-server evidence and its limitations are recorded in `docs/research/2026-09-30-dry-plains-worldgen.md`. Visual gameplay and the two-client acceptance test remain manual.
+
+## Fixed cities (Exodus 0.2.3)
+
+Use a fresh world. The effective lostcities:lostcity profile is exodus; old generated domes are retained. Arena geometry must match the shipped 2000/128/1024 layout, with 64 finite slots. Building spawners are disabled while city chests remain enabled. Dedicated-server evidence and manual acceptance boundaries are in docs/research/2026-09-30-fixed-cities-verification.md. Verify the visual city, border, building distribution, and real two-client gameplay manually.

@@ -31,8 +31,20 @@ public final class LostCitiesIntegration {
     }
 
     public static void registerDimensionAfterConfigsLoaded() {
-        WastelandProfileDefinition.ensureRuntimeProfile();
+        WastelandProfileDefinition.ensureInstalled();
+        // Lost Cities keeps its value private; access it through Forge's public config specification.
+        @SuppressWarnings("unchecked")
+        net.minecraftforge.common.ForgeConfigSpec.ConfigValue<java.util.List<? extends String>> config =
+                (net.minecraftforge.common.ForgeConfigSpec.ConfigValue<java.util.List<? extends String>>)
+                        mcjty.lostcities.setup.Config.COMMON_CONFIG.getValues().get("profiles.dimensionsWithProfiles");
+        config.set(DimensionProfileBinding.replace(config.get(), WASTELAND_DIMENSION.location().toString(),
+                WastelandProfileDefinition.PROFILE_NAME));
+        mcjty.lostcities.setup.Config.resetProfileCache();
         LIFECYCLE.registerDimension(WASTELAND_DIMENSION, WastelandProfileDefinition.PROFILE_NAME);
+        if (!WastelandProfileDefinition.PROFILE_NAME.equals(mcjty.lostcities.setup.Config.getProfileForDimension(WASTELAND_DIMENSION))) {
+            throw new IllegalStateException("Exodus fixed city profile was not bound to lostcities:lostcity");
+        }
+        com.mojang.logging.LogUtils.getLogger().info("[Exodus] Fixed city profile exodus bound to lostcities:lostcity; glass domes and building spawners disabled.");
     }
 
     public static java.util.Optional<LostCitiesBridge> bridge(){return LIFECYCLE.api().map(LostCitiesApiBridge::new);}

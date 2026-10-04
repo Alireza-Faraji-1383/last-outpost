@@ -42,6 +42,9 @@ approved zombie/soldier behavior. Real multiplayer performance remains manual ac
 
 ## Engineering rules
 
+- Work directly in the primary checkout on `main` and commit completed, verified changes there. Do not create another worktree for new work. This is the user's explicit project workflow preference.
+- Match-owned two-player parties are an approved exception, specified in `docs/superpowers/specs/2026-10-04-project-exodus-parties-design.md`.
+
 - Every delivered mod change must increment `mod_version`; produce a newly versioned JAR and keep distribution output versions consistent. Never overwrite a released version with changed contents.
 - All installed gun attachments and Zero Contact items are approved chest-loot content. Higher actual scope zoom and greater net equipment benefits must be rarer. Preserve chest quantity.
 - Sparse match-bound saddled horses are approved: two global daytime spawn opportunities per world day, with a configurable batch and global population cap separate from enemies.

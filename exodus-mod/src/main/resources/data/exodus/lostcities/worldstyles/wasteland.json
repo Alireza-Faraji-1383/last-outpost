@@ -1,0 +1,8 @@
+{
+  "outsidestyle": "outside",
+  "bridgesupport": "v",
+  "highwaysupport": "v",
+  "settings": {"railwayavoidance": "ignore", "railpartheight6": 1},
+  "multisettings": {"areasize": 10, "minimum": 1, "maximum": 5, "correctstylefactor": 0.8, "attempts": 50},
+  "citystyles": [{"factor": 1.0, "citystyle": "exodus:residential"}]
+}

@@ -24,7 +24,7 @@ public final class ExodusCommands {
             .then(Commands.literal("stop").executes(c->{int r=MatchManager.stop(c.getSource().getServer(),"Stopped by admin.");c.getSource().sendSuccess(()->Component.literal(r==1?"Exodus match stopped.":"No active Exodus match."),true);return r;}))
             .then(Commands.literal("status").executes(c->lines(c,MatchManager.status(c.getSource().getServer()))))
             .then(Commands.literal("arena")
-                .then(Commands.literal("prepare").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();ArenaPreparationService.prepare(c.getSource().getServer(),p.getUUID());return 1;}))
+                .then(Commands.literal("prepare").executes(ExodusCommands::prepareArena))
                 .then(Commands.literal("status").executes(c->lines(c,ArenaPreparationService.status(c.getSource().getServer()))))
                 .then(Commands.literal("locations").executes(ExodusCommands::arenaLocations))
                 .then(Commands.literal("tp").then(Commands.argument("placementId",StringArgumentType.word())
@@ -37,6 +37,16 @@ public final class ExodusCommands {
             .then(Commands.literal("players").executes(c->{ServerPlayer p=c.getSource().getPlayerOrException();return lines(c,MatchManager.playerLines(p));})));
     }
     private static int start(CommandContext<CommandSourceStack> c,Integer x,Integer z,boolean random) throws com.mojang.brigadier.exceptions.CommandSyntaxException{return MatchManager.start(c.getSource().getPlayerOrException(),x,z,random);}
+    private static int prepareArena(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = c.getSource().getPlayerOrException();
+        try {
+            ArenaPreparationService.prepare(c.getSource().getServer(),player.getUUID());
+            return 1;
+        } catch (IllegalStateException exception) {
+            c.getSource().sendFailure(Component.literal(exception.getMessage()));
+            return 0;
+        }
+    }
     private static int arenaLocations(CommandContext<CommandSourceStack> c){var locations=ArenaPreparationService.locations(c.getSource().getServer());if(locations.isEmpty()){c.getSource().sendFailure(Component.literal("No finalized Exodus structure locations are available."));return 0;}for(var location:locations){String command="/exodus arena tp "+location.placementId();Component line=Component.literal(location.placementId()+" ["+location.kind()+"] X "+location.x()+" Y "+location.y()+" Z "+location.z()+" ").append(Component.literal("[TP]").withStyle(style->style.withColor(net.minecraft.ChatFormatting.AQUA).withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,command)).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,Component.literal("Teleport to "+location.placementId())))));c.getSource().sendSuccess(()->line,false);}return locations.size();}
     private static int arenaTeleport(CommandContext<CommandSourceStack> c) throws com.mojang.brigadier.exceptions.CommandSyntaxException{String id=StringArgumentType.getString(c,"placementId");var location=ArenaPreparationService.location(c.getSource().getServer(),id).orElse(null);if(location==null){c.getSource().sendFailure(Component.literal("Unknown or unavailable Exodus structure location: "+id));return 0;}ServerPlayer player=c.getSource().getPlayerOrException();int result=MatchManager.operatorTeleport(player,location.x(),location.teleportY(),location.z());if(result==1)c.getSource().sendSuccess(()->Component.literal("Teleported to "+id+"."),false);return result;}
     private static int lines(CommandContext<CommandSourceStack> c,java.util.List<String> lines){for(String line:lines)c.getSource().sendSuccess(()->Component.literal(line),false);return 1;}

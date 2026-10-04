@@ -15,6 +15,11 @@ base {
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+// Explicit fresh-world runtime probe; never included in the normal production JAR.
+if (project.hasProperty('citySmoke')) {
+    sourceSets.main.java.srcDir 'src/smoke/java'
+}
+
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
     // The mappings can be changed at any time and must be in the following format.
@@ -128,6 +133,49 @@ sourceSets {
 }
 minecraft.runs.gameTestServer.mods.exodus.source sourceSets.gametest
 if (project.hasProperty('journeyMapRuntime')) minecraft.runs.server.mods.exodus.source sourceSets.gametest
+
+// Predefined cities must exist before the world's dynamic registries are loaded.
+// One manifest supplies both arena allocation and generated city coordinates.
+def fixedCityResources = layout.buildDirectory.dir('generated/fixed-cities')
+sourceSets.main.resources.srcDir fixedCityResources
+tasks.register('generateFixedCities') {
+    inputs.file('src/main/resources/data/exodus/city_layout.json')
+    outputs.dir(fixedCityResources)
+    doLast {
+        def cityLayout = new groovy.json.JsonSlurper().parse(file('src/main/resources/data/exodus/city_layout.json'))
+        def output = fixedCityResources.get().asFile
+        project.delete(output)
+        def writeAsset = { String kind, String name, Map value ->
+            def target = new File(output, "data/exodus/lostcities/${kind}/${name}.json")
+            target.parentFile.mkdirs()
+            target.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(value)), 'UTF-8')
+        }
+        long x = 0, z = 0, dx = 1, dz = 0
+        cityLayout.count.times { ordinal ->
+            x += dx; z += dz
+            if (x == z || (x < 0 && x == -z) || (x > 0 && x == 1 - z)) {
+                long previousDx = dx; dx = -dz; dz = previousDx
+            }
+            int steps = cityLayout.neighborhoodExtent.intdiv(cityLayout.neighborhoodSpacing)
+            for (int nx=-steps; nx<=steps; nx++) for (int nz=-steps; nz<=steps; nz++) {
+                int px=nx*cityLayout.neighborhoodSpacing, pz=nz*cityLayout.neighborhoodSpacing
+                if (Math.hypot(px,pz)>cityLayout.neighborhoodExtent) continue
+                boolean central = px==0 && pz==0
+                String suffix = central ? '' : "_neighborhood_${px}_${pz}"
+                writeAsset('predefinedcities', "arena_${ordinal}${suffix}", [
+                    dimension: 'lostcities:lostcity',
+                    chunkx: ((x * cityLayout.spacing + cityLayout.offsetX + px) / 16) as int,
+                    chunkz: ((z * cityLayout.spacing + cityLayout.offsetZ + pz) / 16) as int,
+                    radius: cityLayout.radius, citystyle: Math.hypot(px,pz)>384 ? 'exodus:outskirts' : 'exodus:residential',
+                    buildings: central ? [[-8,-8], [8,-8], [-8,8], [8,8], [0,0]].collect { p ->
+                        [building:'exodus:tower', chunkx:p[0], chunkz:p[1], multi:false, preventruins:false]
+                    } : []
+                ])
+            }
+        }
+    }
+}
+tasks.named('processResources').configure { dependsOn 'generateFixedCities' }
 
 repositories {
     if (project.hasProperty('journeyMapRuntime')) {
