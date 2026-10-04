@@ -23,7 +23,7 @@ public final class SurfacePlacementPolicy {
                         .thenComparingInt(Candidate::exactCount)
                         .thenComparing(Candidate::preferred)
                         .thenComparingInt(Candidate::y))
-                .orElseThrow(() -> new IllegalStateException("No surface height satisfies the configured quorum"));
+                .orElseThrow(NoQuorumException::new);
 
         int minimum = supports.stream().mapToInt(Integer::intValue).min().orElseThrow();
         int maximum = supports.stream().mapToInt(Integer::intValue).max().orElseThrow();
@@ -39,6 +39,12 @@ public final class SurfacePlacementPolicy {
     }
 
     private record Candidate(int y, int count, int exactCount, boolean preferred) {}
+
+    public static final class NoQuorumException extends IllegalStateException {
+        public NoQuorumException() {
+            super("No surface height satisfies the configured quorum");
+        }
+    }
 
     public record Selection(int platformY, int quorumCount, int totalColumns,
                             int minimumSupportY, int maximumSupportY) {

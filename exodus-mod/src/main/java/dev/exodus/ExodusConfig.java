@@ -17,7 +17,7 @@ public final class ExodusConfig {
             RUSSIAN_BASE_Y_OFFSET, AMERICAN_BASE_Y_OFFSET,
             SURFACE_QUORUM_PERCENT, SURFACE_HEIGHT_TOLERANCE,
             PREFERRED_SURFACE_MIN_Y, PREFERRED_SURFACE_MAX_Y,
-            MAX_FOUNDATION_DEPTH, POI_CHUNKS_PER_TICK,
+            MAX_FOUNDATION_DEPTH, MAX_SURFACE_CLEAR_DEPTH, POI_CHUNKS_PER_TICK,
             RADIO_LINK_RANGE, DROP_SPAWN_HEIGHT, DROP_SPEED_MILLIBLOCKS,
             LANDING_CLEARANCE, LANDING_RETRY_SECONDS, EMPTY_CRATE_SECONDS,
             TELEPORTER_COUNTDOWN_SECONDS, TELEPORTER_VICTORY_RADIUS_MILLIBLOCKS, TELEPORTER_CAPACITY;
@@ -69,6 +69,8 @@ public final class ExodusConfig {
         PREFERRED_SURFACE_MIN_Y = b.defineInRange("preferredSurfaceMinY", 55, -64, 319);
         PREFERRED_SURFACE_MAX_Y = b.defineInRange("preferredSurfaceMaxY", 70, -64, 319);
         MAX_FOUNDATION_DEPTH = b.defineInRange("maxFoundationDepth", 96, 1, 384);
+        MAX_SURFACE_CLEAR_DEPTH = b.comment("Maximum top-down clearing depth when a POI surface fails its quorum.")
+                .defineInRange("maxSurfaceClearDepth", 32, 0, 384);
         POI_CHUNKS_PER_TICK = b.defineInRange("poiChunksPerTick", 2, 1, 64);
         NATURAL_HOSTILE_SPAWNS = b.define("naturalHostileSpawns", true);
         b.pop();

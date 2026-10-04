@@ -6,6 +6,18 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArenaRegistryTest {
+    @Test void preservesLayoutVersionAndNeverTreatsLegacyAsFixedCity() {
+        ArenaRegistry registry = new ArenaRegistry();
+        var arena = registry.begin(UUID.randomUUID(), 0, 4096, 0, 2000, 128);
+        arena.checkpoint().layoutVersion = 1;
+        assertEquals(1, ArenaRegistry.load(registry.save()).records().get(0).checkpoint().layoutVersion);
+        var legacy = registry.save();
+        ((CompoundTag)legacy.get(0)).remove("layoutVersion");
+        var restored = ArenaRegistry.load(legacy).records().get(0);
+        assertEquals(0, restored.checkpoint().layoutVersion);
+        assertThrows(IllegalStateException.class, () -> dev.exodus.wasteland.profile.FixedCityLayout.load()
+                .requireVersion(restored.checkpoint().layoutVersion));
+    }
     @Test void roundTripsPoiPreparationProgress(){
         ArenaRegistry registry=new ArenaRegistry();
         ArenaRecord arena=registry.begin(UUID.randomUUID(),0,4096,0,2000,128);

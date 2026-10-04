@@ -10,16 +10,24 @@ public final class PlacementPolicy {
     public static PlacementPlan plan(long seed, int centerX, int centerZ, int arenaSize,
                                      int abandonedCount, int occupiedCount, int minimumCampDistance,
                                      List<String> abandonedPool, List<String> occupiedPool) {
+        return plan(seed,centerX,centerZ,arenaSize,abandonedCount,occupiedCount,minimumCampDistance,abandonedPool,occupiedPool,null);
+    }
+
+    public static PlacementPlan plan(long seed, int centerX, int centerZ, int arenaSize,
+                                     int abandonedCount, int occupiedCount, int minimumCampDistance,
+                                     List<String> abandonedPool, List<String> occupiedPool,
+                                     dev.exodus.wasteland.profile.FixedCityLayout cityLayout) {
         if (abandonedPool.isEmpty() || occupiedPool.isEmpty()) throw new IllegalArgumentException("Both camp pools must contain a structure");
         Random random = new Random(seed);
         List<PlacementPlan.Entry> entries = new ArrayList<>();
-        int quarter = arenaSize / 4;
+        int quarter = cityLayout == null ? arenaSize / 4 : cityLayout.baseOffsetX();
+        int baseZ = centerZ + (cityLayout == null ? 0 : cityLayout.baseOffsetZ());
         entries.add(new PlacementPlan.Entry("russian_base", "exodus:russian_base", PlacementPlan.Kind.RUSSIAN_BASE,
-                centerX - quarter - 28, centerZ - 30, 57, 60, PlacementPlan.Rotation.NONE, true));
+                centerX - quarter - 28, baseZ - 30, 57, 60, PlacementPlan.Rotation.NONE, true));
         entries.add(new PlacementPlan.Entry("american_base", "exodus:american_base", PlacementPlan.Kind.AMERICAN_BASE,
-                centerX + quarter - 28, centerZ - 30, 57, 60, PlacementPlan.Rotation.NONE, true));
-        addCamps(entries, random, centerX, centerZ, arenaSize, abandonedCount, minimumCampDistance, abandonedPool, PlacementPlan.Kind.ABANDONED_CAMP);
-        addCamps(entries, random, centerX, centerZ, arenaSize, occupiedCount, minimumCampDistance, occupiedPool, PlacementPlan.Kind.OCCUPIED_CAMP);
+                centerX + quarter - 28, baseZ - 30, 57, 60, PlacementPlan.Rotation.NONE, true));
+        addCamps(entries, random, centerX, centerZ, arenaSize, abandonedCount, minimumCampDistance, abandonedPool, PlacementPlan.Kind.ABANDONED_CAMP, cityLayout);
+        addCamps(entries, random, centerX, centerZ, arenaSize, occupiedCount, minimumCampDistance, occupiedPool, PlacementPlan.Kind.OCCUPIED_CAMP, cityLayout);
         return new PlacementPlan(entries);
     }
 
@@ -30,7 +38,8 @@ public final class PlacementPolicy {
     }
 
     private static void addCamps(List<PlacementPlan.Entry> entries, Random random, int cx, int cz, int size,
-                                 int count, int minimumDistance, List<String> pool, PlacementPlan.Kind kind) {
+                                 int count, int minimumDistance, List<String> pool, PlacementPlan.Kind kind,
+                                 dev.exodus.wasteland.profile.FixedCityLayout cityLayout) {
         int attempts = 0, placed = 0, half = size / 2;
         while (placed < count && attempts++ < Math.max(100, count * 100)) {
             int x = cx - half + 32 + random.nextInt(Math.max(1, size - 64));
@@ -38,7 +47,9 @@ public final class PlacementPolicy {
             PlacementPlan.Entry candidate = new PlacementPlan.Entry(kind.name().toLowerCase() + "_" + placed,
                     pool.get(random.nextInt(pool.size())), kind, x, z, 11, 16,
                     PlacementPlan.Rotation.values()[random.nextInt(4)], false);
-            if (entries.stream().allMatch(existing -> distance(existing, candidate) >= minimumDistance)) {
+            if ((cityLayout == null || !cityLayout.intersectsCity(cx,cz,candidate.x(),candidate.z(),
+                    candidate.maxX(),candidate.maxZ(),cityLayout.poiMargin()))
+                    && entries.stream().allMatch(existing -> distance(existing, candidate) >= minimumDistance)) {
                 entries.add(candidate);
                 placed++;
             }

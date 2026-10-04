@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "count": 64,
+  "arenaSize": 2000,
+  "buffer": 128,
+  "safetyGap": 1024,
+  "spacing": 4096,
+  "offsetX": 0,
+  "offsetZ": -160,
+  "radius": 240,
+  "neighborhoodSpacing": 128,
+  "neighborhoodExtent": 576,
+  "threshold": 0.2,
+  "baseOffsetX": 500,
+  "baseOffsetZ": 800,
+  "poiMargin": 32
+}

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 public final class PreparationCheckpoint {
     public ArenaPhase phase = ArenaPhase.DEPENDENCY_CHECK;
     public int chunkCursor;
+    public int layoutVersion;
     public int citySamples;
     public int cityChunks;
     public int lastAnnouncedPercent;

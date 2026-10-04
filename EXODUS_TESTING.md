@@ -12,3 +12,17 @@
 10. Repeat with one associated player offline; verify the pending return happens on their next login.
 
 Real two-client multiplayer behavior is not considered verified until this checklist is completed by the user.
+
+## Dry Plains world generation (2026-09-30)
+
+Restart Minecraft after installing the updated Exodus JAR and create a fresh world for world-generation verification. Existing saves and already-generated terrain are retained; their saved generator settings are not migrated.
+
+The `lostcities:lostcity` dimension now uses the isolated `exodus:dry_plains` biome and noise settings. This biome copies vanilla Plains appearance, plants, animals, and cave carvers, but excludes water springs, dungeons, and geodes. It intentionally belongs to no vanilla biome tags, so vanilla structures (including villages, mineshafts, strongholds, and ruined portals) cannot select it. Lost Cities is added directly through an Exodus biome modifier.
+
+Verify that the match dimension has rolling grass-covered terrain, dry caves, no natural water, and no vanilla structures, while Lost Cities buildings and Exodus bases/camps still appear. Water explicitly authored in a template or placed by a player is not removed. The normal Overworld, Nether, and End are unchanged.
+
+Automated dedicated-server evidence and its limitations are recorded in `docs/research/2026-09-30-dry-plains-worldgen.md`. Visual gameplay and the two-client acceptance test remain manual.
+
+## Fixed cities (Exodus 0.2.3)
+
+Use a fresh world. The effective lostcities:lostcity profile is exodus; old generated domes are retained. Arena geometry must match the shipped 2000/128/1024 layout, with 64 finite slots. Building spawners are disabled while city chests remain enabled. Dedicated-server evidence and manual acceptance boundaries are in docs/research/2026-09-30-fixed-cities-verification.md. Verify the visual city, border, building distribution, and real two-client gameplay manually.

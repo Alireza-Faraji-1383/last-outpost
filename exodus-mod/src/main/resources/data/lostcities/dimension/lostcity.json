@@ -1,12 +1,12 @@
 {
-  "type": "lostcities:lostcity",
+  "type": "exodus:wasteland",
   "generator": {
     "type": "minecraft:noise",
     "seed": 0,
-    "settings": "minecraft:overworld",
+    "settings": "exodus:dry_plains",
     "biome_source": {
       "type": "minecraft:fixed",
-      "biome": "minecraft:plains"
+      "biome": "exodus:dry_plains"
     }
   },
   "forge:use_server_seed": true

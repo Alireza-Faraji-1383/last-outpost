@@ -1,0 +1,5 @@
+{
+  "inherit": "citystyle_standard",
+  "buildingsettings": {"minfloors": 3, "maxfloors": 6, "buildingchance": 0.65},
+  "profile_overrides": {"openLotParkChance": 0.25}
+}
