@@ -1,0 +1,50 @@
+{
+  "pools": [
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/equipment",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/zero_contact",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/attachments",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 12,
+                "max": 20
+              }
+            }
+          ],
+          "name": "minecraft:emerald",
+          "type": "minecraft:item"
+        }
+      ]
+    }
+  ],
+  "type": "minecraft:chest"
+}

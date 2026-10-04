@@ -1,0 +1,11 @@
+{
+  "lootTable": "exodus:events/core",
+  "title": "Dimensional Core Airdrop",
+  "core": true,
+  "scope": "GLOBAL",
+  "objective": "WORLD_DROP",
+  "milestoneDay": 5,
+  "oneTime": true,
+  "minDay": 5,
+  "weight": 0
+}

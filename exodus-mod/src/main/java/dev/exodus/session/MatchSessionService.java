@@ -11,6 +11,6 @@ public final class MatchSessionService {
   for(var location:s.locations)if(location.kind()!=MapLocation.Kind.CITY)DeviceIndex.scan(level,new BlockPos(location.x()-64,location.y()-32,location.z()-64),new Vec3i(128,96,128),null);
   s.selectedSpawns.putAll(s.originalSpawns);d.setDirty();
  }
- public static void tick(MinecraftServer server){var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING)return;d.session.elapsedTicks++;DeviceOwnershipService.tick(server);MatchBossBarService.tick(server);MatchMapService.tick(server);d.setDirty();}
- public static void cleanup(MinecraftServer server){var d=ExodusSavedData.get(server);MatchMapService.clear(server);MatchBossBarService.cleanup(server);DeviceOwnershipService.cleanup(server);d.session=new MatchSessionState();d.setDirty();}
+ public static void tick(MinecraftServer server){var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING)return;d.session.elapsedTicks++;DeviceOwnershipService.tick(server);dev.exodus.event.EventManager.tick(server);MatchBossBarService.tick(server);MatchMapService.tick(server);d.setDirty();}
+ public static void cleanup(MinecraftServer server){var d=ExodusSavedData.get(server);dev.exodus.event.EventManager.cleanup(server);MatchMapService.clear(server);MatchBossBarService.cleanup(server);DeviceOwnershipService.cleanup(server);d.session=new MatchSessionState();d.setDirty();}
 }

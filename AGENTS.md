@@ -42,6 +42,10 @@ approved zombie/soldier behavior. Real multiplayer performance remains manual ac
 
 ## Engineering rules
 
+- Every delivered mod change must increment `mod_version`; produce a newly versioned JAR and keep distribution output versions consistent. Never overwrite a released version with changed contents.
+- All installed gun attachments and Zero Contact items are approved chest-loot content. Higher actual scope zoom and greater net equipment benefits must be rarer. Preserve chest quantity.
+- Sparse match-bound saddled horses are approved: two global daytime spawn opportunities per world day, with a configurable batch and global population cap separate from enemies.
+
 - Do not guess Forge or Minecraft APIs. Verify against Forge 47.4.10/Minecraft 1.20.1 sources or compilation.
 - Keep match, base allocation, structures, persistence, commands, and configuration modular.
 - Avoid magic numbers; gameplay thresholds belong in `ExodusConfig`.
