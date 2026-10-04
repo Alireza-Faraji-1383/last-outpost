@@ -15,7 +15,7 @@ class VersionContractTest {
         String curseForgeTest = Files.readString(Path.of("tools", "test-curseforge-pack.ps1"));
         String modrinth = Files.readString(Path.of("tools", "build-mrpack.ps1"));
 
-        assertTrue(properties.contains("mod_version=0.7.1"));
+        assertTrue(properties.contains("mod_version=0.7.2"));
         for (String content : new String[]{curseForge, curseForgeTest, modrinth}) {
             assertTrue(content.contains("gradle.properties"));
             assertTrue(content.contains("$packVersion"));

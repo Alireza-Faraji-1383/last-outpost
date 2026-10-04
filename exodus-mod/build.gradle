@@ -300,3 +300,9 @@ publishing {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
+
+// Optional installed-mod runtime for the Corpse compatibility GameTest.
+if (project.hasProperty('corpseRuntime')) {
+    repositories { flatDir { dirs '../mods' } }
+    dependencies { runtimeOnly fg.deobf('local.corpse:corpse-forge-1.20.1:1.0.23') }
+}
