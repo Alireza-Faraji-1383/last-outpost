@@ -40,6 +40,8 @@ public class SupplyDropEntity extends Entity {
         super.tick();if(level().isClientSide)return;
         if(!(level() instanceof ServerLevel server)||dropId==null){discard();return;}
         var data=ExodusSavedData.get(server.getServer());
+        if(dev.exodus.MatchManager.awaitingRestart(server.getServer()))return;
+        if(eventDrop()&&data.session.events.drops.containsKey(dropId))eventExpires=data.session.events.drops.get(dropId).expires();
         if(matchId==null||!matchId.equals(data.matchId)||eventDrop()&&(data.state!=MatchState.RUNNING||!data.session.events.drops.containsKey(dropId)||server.getGameTime()>=eventExpires)){clearRadio(server);discard();return;}
         double speed=ExodusConfig.DROP_SPEED_MILLIBLOCKS.get()/1000.0;BlockPos next=BlockPos.containing(getX(),getY()-speed,getZ());
         server.sendParticles(new DustParticleOptions(new Vector3f(((smokeColor>>16)&255)/255f,((smokeColor>>8)&255)/255f,(smokeColor&255)/255f),1f),getX(),getY(),getZ(),2,.15,.05,.15,0);

@@ -36,6 +36,7 @@ public final class EnemySpawnService {
         Mob mob;
         Vec3 lastPosition;
         long farSince=-1;
+        Entry(net.minecraft.nbt.CompoundTag t){id=t.getUUID("id");owner=t.getUUID("owner");match=t.getUUID("match");kind=EnemyKind.valueOf(t.getString("kind"));lastPosition=new Vec3(t.getDouble("x"),t.getDouble("y"),t.getDouble("z"));}
         Entry(Mob mob) {
             id=mob.getUUID();owner=EnemyTags.owner(mob);match=EnemyTags.match(mob);kind=EnemyTags.kind(mob);
             this.mob=mob;lastPosition=mob.position();
@@ -69,6 +70,7 @@ public final class EnemySpawnService {
                 && mob.level().dimension().equals(LostCitiesIntegration.WASTELAND_DIMENSION);
     }
     public static void tick(MinecraftServer server) {
+        if(MatchManager.awaitingRestart(server))return;
         ServerLevel level=server.getLevel(LostCitiesIntegration.WASTELAND_DIMENSION);
         if (level==null) return;
         ExodusSavedData data=ExodusSavedData.get(server);
@@ -192,6 +194,14 @@ public final class EnemySpawnService {
         RETIRED.add(entry.id);
         ENTRIES.remove(entry.id);POPULATION.remove(entry.id);
         if (entry.mob!=null && !entry.mob.isRemoved()) entry.mob.discard();
+    }
+    public static net.minecraft.nbt.ListTag snapshotFor(UUID match,net.minecraft.nbt.ListTag fallback){return Objects.equals(match,currentMatch)?snapshot():fallback;}
+    public static net.minecraft.nbt.ListTag snapshot(){
+        var list=new net.minecraft.nbt.ListTag();for(var e:ENTRIES.values()){var t=new net.minecraft.nbt.CompoundTag();t.putUUID("id",e.id);t.putUUID("owner",e.owner);t.putUUID("match",e.match);t.putString("kind",e.kind.name());t.putDouble("x",e.lastPosition.x);t.putDouble("y",e.lastPosition.y);t.putDouble("z",e.lastPosition.z);list.add(t);}return list;
+    }
+    public static void resume(UUID match,net.minecraft.nbt.ListTag list){
+        currentMatch=match;
+        for(var raw:list){var e=new Entry((net.minecraft.nbt.CompoundTag)raw);if(match.equals(e.match)&&!ENTRIES.containsKey(e.id)){ENTRIES.put(e.id,e);MAINTENANCE.addLast(e.id);POPULATION.add(e.id,e.owner,e.kind);}}
     }
     public static void reset() {
         EnemyAiWork.reset();

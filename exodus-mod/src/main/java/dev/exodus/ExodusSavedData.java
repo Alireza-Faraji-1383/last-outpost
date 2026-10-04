@@ -14,6 +14,9 @@ import dev.exodus.wasteland.arena.ArenaRegistry;
 public final class ExodusSavedData extends SavedData {
     public MatchState state = MatchState.IDLE;
     public UUID matchId;
+    public int schemaVersion = 2;
+    public final Set<UUID> restartPlayers = new HashSet<>();
+    public dev.exodus.party.PartyState parties;
     public String dimension = "";
     public int centerX, centerZ;
     public long startMillis, allocationSeed;
@@ -29,6 +32,8 @@ public final class ExodusSavedData extends SavedData {
     public ArenaRegistry arenas = new ArenaRegistry();
     public dev.exodus.session.MatchSessionState session = new dev.exodus.session.MatchSessionState();
     public long mapEpoch;
+    public ListTag enemyRoster = new ListTag();
+    public ListTag horseRoster = new ListTag();
     public final Map<UUID, List<String>> pendingNotices = new HashMap<>();
 
     public static ExodusSavedData get(MinecraftServer server) {
@@ -37,6 +42,7 @@ public final class ExodusSavedData extends SavedData {
 
     public static ExodusSavedData load(CompoundTag tag) {
         var d = new ExodusSavedData();
+        d.schemaVersion = tag.contains("schemaVersion") ? tag.getInt("schemaVersion") : 1;
         try { d.state = MatchState.valueOf(tag.getString("state")); } catch (Exception ignored) {}
         if (tag.hasUUID("matchId")) d.matchId = tag.getUUID("matchId");
         d.dimension = tag.getString("dimension"); d.centerX = tag.getInt("centerX"); d.centerZ = tag.getInt("centerZ");
@@ -60,12 +66,19 @@ public final class ExodusSavedData extends SavedData {
         if(tag.contains("teleporter",Tag.TAG_COMPOUND))d.teleporter=TeleporterSavedState.load(tag.getCompound("teleporter"));
         if(tag.contains("arenas",Tag.TAG_LIST))d.arenas=ArenaRegistry.load(tag.getList("arenas",Tag.TAG_COMPOUND));
         d.session=dev.exodus.session.MatchSessionState.load(tag.getCompound("session"));
-        d.mapEpoch=tag.getLong("mapEpoch");
+        d.mapEpoch=tag.getLong("mapEpoch");d.enemyRoster=tag.getList("enemyRoster",Tag.TAG_COMPOUND).copy();d.horseRoster=tag.getList("horseRoster",Tag.TAG_COMPOUND).copy();
         for(Tag raw:tag.getList("notices",Tag.TAG_COMPOUND)){CompoundTag n=(CompoundTag)raw;if(!n.hasUUID("player"))continue;List<String> lines=new ArrayList<>();for(Tag line:n.getList("lines",Tag.TAG_STRING))lines.add(line.getAsString());d.pendingNotices.put(n.getUUID("player"),lines);}
+        for (Tag raw : tag.getList("restartPlayers", Tag.TAG_COMPOUND)) { var t=(CompoundTag)raw; if(t.hasUUID("id")) d.restartPlayers.add(t.getUUID("id")); }
+        if(tag.contains("parties",Tag.TAG_COMPOUND))d.parties=dev.exodus.party.PartyState.load(tag.getCompound("parties"));
+        d.schemaVersion=2;
         return d;
     }
 
     @Override public CompoundTag save(CompoundTag tag) {
+        if(state==MatchState.RUNNING){enemyRoster=dev.exodus.enemy.EnemySpawnService.snapshotFor(matchId,enemyRoster);horseRoster=dev.exodus.horse.HorseSpawnService.snapshotFor(matchId,horseRoster);}
+        tag.putInt("schemaVersion",schemaVersion);
+        var resume=new ListTag();restartPlayers.forEach(id->{var t=new CompoundTag();t.putUUID("id",id);resume.add(t);});tag.put("restartPlayers",resume);
+        if(parties!=null)tag.put("parties",parties.save());
         tag.putString("state",state.name()); tag.putString("dimension",dimension); tag.putInt("centerX",centerX); tag.putInt("centerZ",centerZ);
         if (matchId != null) tag.putUUID("matchId", matchId);
         tag.putLong("startMillis",startMillis); tag.putLong("allocationSeed",allocationSeed);
@@ -77,7 +90,7 @@ public final class ExodusSavedData extends SavedData {
         var old=new ListTag(); placedCenters.forEach(s->old.add(StringTag.valueOf(s)));tag.put("placedCenters",old);
         tag.put("teleporter",teleporter.save());
         tag.put("arenas",arenas.save());
-        tag.put("session",session.save());tag.putLong("mapEpoch",mapEpoch);
+        tag.put("enemyRoster",enemyRoster.copy());tag.put("horseRoster",horseRoster.copy());tag.put("session",session.save());tag.putLong("mapEpoch",mapEpoch);
         ListTag notices=new ListTag();pendingNotices.forEach((id,lines)->{CompoundTag n=new CompoundTag();n.putUUID("player",id);ListTag values=new ListTag();lines.forEach(line->values.add(StringTag.valueOf(line)));n.put("lines",values);notices.add(n);});tag.put("notices",notices);
         return tag;
     }

@@ -74,6 +74,8 @@ public final class EventGameTests {
             for(int n=0;n<50;n++)MinecraftForge.EVENT_BUS.post(new LivingDeathEvent(new Zombie(level),level.damageSources().playerAttack(hunter)));
             h.assertTrue(emeralds(hunter)==(hunter==surviving?34:26),"50 attributed zombie kills pay contributor 10 emeralds");
             h.assertTrue(emeralds(prey)==(prey==surviving?8:0),"Noncontributor gets no hunt reward");
+            // Keep overflow entities in the already-ticking test chunk regardless of the random hunter.
+            hunter.teleportTo(level,d.centerX+.5,100,d.centerZ+.5,0,0);
             UUID transaction=UUID.randomUUID();for(int n=0;n<hunter.getInventory().getContainerSize();n++)hunter.getInventory().setItem(n,new ItemStack(Items.STONE,64));
             h.assertTrue(EventRewardService.pay(hunter,transaction,10,"Overflow"),"Full inventory still pays");
             h.assertTrue(!EventRewardService.pay(hunter,transaction,10,"Overflow"),"Transaction cannot be paid twice");

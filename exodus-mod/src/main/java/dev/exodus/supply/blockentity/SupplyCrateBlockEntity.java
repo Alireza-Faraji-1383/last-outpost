@@ -41,6 +41,8 @@ public class SupplyCrateBlockEntity extends RandomizableContainerBlockEntity {
     @Override protected NonNullList<ItemStack> getItems(){return items;}
     @Override protected void setItems(NonNullList<ItemStack> value){items=value;}
     public static void tick(ServerLevel level,BlockPos pos,BlockState state,SupplyCrateBlockEntity crate){
+        if(dev.exodus.MatchManager.awaitingRestart(level.getServer()))return;
+        if(crate.eventDropId!=null&&dev.exodus.ExodusSavedData.get(level.getServer()).session.events.drops.containsKey(crate.eventDropId))crate.eventExpires=dev.exodus.ExodusSavedData.get(level.getServer()).session.events.drops.get(crate.eventDropId).expires();
         if(crate.eventDropId!=null){var data=dev.exodus.ExodusSavedData.get(level.getServer());if(data.state!=dev.exodus.MatchState.RUNNING||!java.util.Objects.equals(crate.eventMatchId,data.matchId)||!data.session.events.drops.containsKey(crate.eventDropId)||level.getGameTime()>=crate.eventExpires){level.removeBlock(pos,false);return;}}
         if(crate.lootTable!=null)return;if(crate.isEmpty()){if(crate.emptySince<0){crate.emptySince=level.getGameTime();crate.setChanged();}else if(level.getGameTime()-crate.emptySince>=ExodusConfig.EMPTY_CRATE_SECONDS.get()*20L)level.removeBlock(pos,false);}else if(crate.emptySince>=0){crate.emptySince=-1;crate.setChanged();}
     }

@@ -36,12 +36,13 @@ public final class EventAirdropService {
         var d=ExodusSavedData.get(server);
         if(def.core()&&d.teleporter.rareClaims().contains(TeleporterComponent.DIMENSIONAL_CORE)){d.session.events.schedule.started(def,EventManager.day(server));d.setDirty();return true;}
         var jobs=JOBS.computeIfAbsent(server,k->new LinkedHashMap<>());if(jobs.containsKey(def.id()))return false;
-        jobs.put(def.id(),new Job(d.matchId,def));return true;
+        jobs.put(def.id(),new Job(d.matchId,def));d.session.events.pendingDrops.add(def.id());d.setDirty();return true;
     }
     public static void tick(MinecraftServer server){
         var d=ExodusSavedData.get(server);var level=level(server);if(level==null)return;
-        var jobs=JOBS.get(server);
-        if(jobs!=null&&!jobs.isEmpty()){
+        var jobs=JOBS.computeIfAbsent(server,k->new LinkedHashMap<>());
+        for(String id:new ArrayList<>(d.session.events.pendingDrops))if(!jobs.containsKey(id))EventCatalog.get(id).ifPresent(def->jobs.put(id,new Job(d.matchId,def)));
+        if(!jobs.isEmpty()){
             var entry=jobs.entrySet().iterator().next();var job=entry.getValue();
             if(!Objects.equals(job.match,d.matchId)||d.state!=MatchState.RUNNING)jobs.remove(entry.getKey());
             else for(int i=0;i<ExodusConfig.EVENT_CANDIDATES_PER_TICK.get();i++){
@@ -50,6 +51,7 @@ public final class EventAirdropService {
                 if(job.attempts>=ExodusConfig.EVENT_PLACEMENT_ATTEMPTS.get()){jobs.remove(entry.getKey());LogUtils.getLogger().warn("[Exodus] Could not place event drop {}; milestones will retry.",job.definition.id());break;}
             }
         }
+        d.session.events.pendingDrops.removeIf(id->!jobs.containsKey(id));
         if(d.session.elapsedTicks%20!=1)return;
         for(var drop:new ArrayList<>(d.session.events.drops.values())){
             BlockPos pos=BlockPos.of(drop.position());
@@ -105,8 +107,12 @@ public final class EventAirdropService {
         var entity=level.getEntity(drop.entity());if(entity instanceof SupplyDropEntity falling&&drop.id().equals(falling.dropId()))entity.discard();
         BlockPos pos=BlockPos.of(drop.position());if(drop.landed()&&level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof SupplyCrateBlockEntity crate&&drop.id().equals(crate.eventDropId()))level.removeBlock(pos,false);
     }
+    public static void pause(MinecraftServer server,long ticks){
+        if(ticks<=0)return;var d=ExodusSavedData.get(server);
+        d.session.events.drops.replaceAll((id,drop)->new EventSavedState.Drop(id,drop.entity(),drop.position(),drop.expires()==Long.MAX_VALUE?Long.MAX_VALUE:drop.expires()+ticks,drop.title(),drop.core(),drop.landed()));d.setDirty();
+    }
     public static void cleanup(MinecraftServer server){
-        JOBS.remove(server);var d=ExodusSavedData.get(server);var level=level(server);
+        JOBS.remove(server);var d=ExodusSavedData.get(server);d.session.events.pendingDrops.clear();var level=level(server);
         var drops=new ArrayList<>(d.session.events.drops.values());
         // Revoke ownership first: block removal must not look like a player breaking a live Core crate.
         d.session.events.drops.clear();d.setDirty();if(level!=null)for(var drop:drops)remove(level,drop);

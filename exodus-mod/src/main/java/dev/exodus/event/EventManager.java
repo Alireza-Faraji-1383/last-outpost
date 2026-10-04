@@ -13,14 +13,14 @@ import java.util.*;
 public final class EventManager {
     public record Run(UUID id,EventDefinition definition,ObjectiveProgress progress,int huntReward,int hunterReward,int preyReward){}
     private static final class Runtime {
-        final UUID match;final Random random;final List<Run> runs=new ArrayList<>();
-        Runtime(UUID id){match=id;random=new Random(id.getMostSignificantBits()^id.getLeastSignificantBits());}
+        final UUID match;final Random random;final List<Run> runs;
+        Runtime(UUID id,List<Run> saved){runs=saved;match=id;random=new Random(id.getMostSignificantBits()^id.getLeastSignificantBits());}
     }
     private static final Map<MinecraftServer,Runtime> RUNTIME=new WeakHashMap<>();
     private EventManager(){}
     private static Runtime runtime(MinecraftServer server){
         var d=ExodusSavedData.get(server);var current=RUNTIME.get(server);
-        if(current==null||!current.match.equals(d.matchId)){current=new Runtime(d.matchId);RUNTIME.put(server,current);}return current;
+        if(current==null||!current.match.equals(d.matchId)){current=new Runtime(d.matchId,d.session.events.runs);RUNTIME.put(server,current);}return current;
     }
     public static List<ServerPlayer> players(MinecraftServer server){return MatchManager.associatedOnlinePlayers(server).stream().filter(p->MatchManager.isActiveMatchPlayer(p)&&p.isAlive()).sorted(Comparator.comparing(p->p.getUUID().toString())).toList();}
     public static int day(MinecraftServer server){return EventSchedule.day(ExodusSavedData.get(server).session.elapsedTicks,ExodusConfig.EVENT_DAY_TICKS.get());}
@@ -31,10 +31,10 @@ public final class EventManager {
         for(var run:new ArrayList<>(r.runs)){
             var p=run.progress();
             if(p.hunter()!=null&&p.outcome()==ObjectiveProgress.Outcome.ACTIVE){
-                boolean eligible=p.participants().stream().allMatch(id->{var player=server.getPlayerList().getPlayer(id);return player!=null&&player.isAlive()&&MatchManager.isActiveMatchPlayer(player);});
+                boolean eligible=p.participants().stream().allMatch(id->{var player=server.getPlayerList().getPlayer(id);return d.pendingPlayers.containsKey(id)||player!=null&&player.isAlive()&&MatchManager.isActiveMatchPlayer(player);});
                 if(!eligible)p.cancel();
             }
-            if(p.hunter()==null&&p.participants().stream().noneMatch(id->{var player=server.getPlayerList().getPlayer(id);return player!=null&&player.isAlive()&&MatchManager.isActiveMatchPlayer(player);}))p.cancel();
+            if(p.hunter()==null&&p.participants().stream().noneMatch(id->{var player=server.getPlayerList().getPlayer(id);return d.pendingPlayers.containsKey(id)||player!=null&&player.isAlive()&&MatchManager.isActiveMatchPlayer(player);}))p.cancel();
             p.advance(now);if(p.outcome()!=ObjectiveProgress.Outcome.ACTIVE)finish(server,r,run);
         }
         EventAirdropService.tick(server);
@@ -119,7 +119,7 @@ public final class EventManager {
         var r=RUNTIME.get(server);if(r!=null)for(var run:r.runs)lines.add(run.id()+" "+run.definition().id()+" "+(run.progress().remaining(d.session.elapsedTicks)+19)/20+"s");
         lines.add("Airdrops: "+d.session.events.drops.size()+"; pending: "+EventAirdropService.pending(server));return lines;
     }
-    public static void cleanup(MinecraftServer server){RUNTIME.remove(server);EventScoreboardService.cleanup(server);EventAirdropService.cleanup(server);}
+    public static void cleanup(MinecraftServer server){ExodusSavedData.get(server).session.events.runs.clear();RUNTIME.remove(server);EventScoreboardService.cleanup(server);EventAirdropService.cleanup(server);}
     public static void stop(MinecraftServer server){
         var r=RUNTIME.get(server);if(r!=null)for(var run:new ArrayList<>(r.runs)){run.progress().cancel();finish(server,r,run);}
         EventAirdropService.cleanup(server);EventScoreboardService.cleanup(server);

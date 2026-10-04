@@ -1,6 +1,7 @@
 package dev.exodus.event.domain;
 
 import java.util.*;
+import net.minecraft.nbt.*;
 
 /** One-way objective state; handlers may only claim a winner's reward once. */
 public final class ObjectiveProgress {
@@ -40,5 +41,15 @@ public final class ObjectiveProgress {
     }; }
     public boolean claimReward(UUID player) { return winners().contains(player) && paid.add(player); }
     public int kills(){return victims.size();} public int goal(){return goal;} public long remaining(long now){return Math.max(0,deadline-now);}
+    public CompoundTag save(){
+        var t=new CompoundTag();t.putLong("deadline",deadline);t.putInt("goal",goal);t.putString("outcome",outcome.name());if(hunter!=null){t.putUUID("hunter",hunter);t.putUUID("prey",prey);}
+        putIds(t,"participants",participants);putIds(t,"contributors",contributors);putIds(t,"victims",victims);putIds(t,"paid",paid);return t;
+    }
+    public static ObjectiveProgress load(CompoundTag t){
+        var s=new ObjectiveProgress(ids(t,"participants"),t.hasUUID("hunter")?t.getUUID("hunter"):null,t.hasUUID("prey")?t.getUUID("prey"):null,t.getLong("deadline")-1,1,t.getInt("goal"));
+        s.contributors.addAll(ids(t,"contributors"));s.victims.addAll(ids(t,"victims"));s.paid.addAll(ids(t,"paid"));s.outcome=Outcome.valueOf(t.getString("outcome"));return s;
+    }
+    private static void putIds(CompoundTag t,String name,Set<UUID> ids){var list=new ListTag();for(UUID id:ids){var a=new CompoundTag();a.putUUID("id",id);list.add(a);}t.put(name,list);}
+    private static Set<UUID> ids(CompoundTag t,String name){Set<UUID> ids=new HashSet<>();for(Tag raw:t.getList(name,Tag.TAG_COMPOUND))ids.add(((CompoundTag)raw).getUUID("id"));return ids;}
     public Outcome outcome(){return outcome;}public Set<UUID> participants(){return participants;}public UUID hunter(){return hunter;}public UUID prey(){return prey;}
 }

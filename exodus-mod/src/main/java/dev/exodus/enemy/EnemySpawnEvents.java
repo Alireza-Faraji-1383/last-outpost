@@ -115,5 +115,5 @@ public final class EnemySpawnEvents {
         if (drops.gunpowder()>0) event.getDrops().add(new ItemEntity(mob.level(),mob.getX(),mob.getY(),mob.getZ(),new ItemStack(Items.GUNPOWDER,drops.gunpowder())));
         if (drops.quartz()>0) event.getDrops().add(new ItemEntity(mob.level(),mob.getX(),mob.getY(),mob.getZ(),new ItemStack(Items.QUARTZ,drops.quartz())));
     }
-    @SubscribeEvent public static void stop(ServerStoppingEvent event) { EnemySpawnService.reset(); HorseSpawnService.reset(); ADMIN_COMMAND.remove(); }
+    @SubscribeEvent public static void stop(ServerStoppingEvent event) { EnemySpawnService.reset(); HorseSpawnService.suspend(); ADMIN_COMMAND.remove(); }
 }

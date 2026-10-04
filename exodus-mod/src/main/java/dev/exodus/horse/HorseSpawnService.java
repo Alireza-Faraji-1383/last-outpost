@@ -99,6 +99,10 @@ public final class HorseSpawnService {
         }
         return false;
     }
+    public static net.minecraft.nbt.ListTag snapshotFor(UUID match,net.minecraft.nbt.ListTag fallback){return Objects.equals(match,currentMatch)?snapshot():fallback;}
+    public static net.minecraft.nbt.ListTag snapshot(){var list=new net.minecraft.nbt.ListTag();for(UUID id:HORSES.keySet()){var t=new net.minecraft.nbt.CompoundTag();t.putUUID("id",id);list.add(t);}return list;}
+    public static void resume(UUID match,net.minecraft.nbt.ListTag list){currentMatch=match;for(var raw:list){UUID id=((net.minecraft.nbt.CompoundTag)raw).getUUID("id");if(!HORSES.containsKey(id))HORSES.put(id,null);POPULATION.add(id);}}
+    public static void suspend(){HORSES.clear();POPULATION.clear();SCHEDULE.clear();currentMatch=null;}
     public static void reset() {
         for(Horse horse:new ArrayList<>(HORSES.values()))if(horse!=null && !horse.isRemoved())horse.discard();
         HORSES.clear();POPULATION.clear();SCHEDULE.clear();currentMatch=null;

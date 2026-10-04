@@ -20,7 +20,7 @@ public final class ExodusEvents {
     @SubscribeEvent public static void tick(TickEvent.ServerTickEvent e){if(e.phase==TickEvent.Phase.END){MatchManager.tick(e.getServer());ArenaPreparationService.tick(e.getServer());dev.exodus.enemy.EnemySpawnService.tick(e.getServer());dev.exodus.horse.HorseSpawnService.tick(e.getServer());}}
     @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void aboutToStart(ServerAboutToStartEvent e){LostCitiesIntegration.registerDimensionAfterConfigsLoaded();}
     @SubscribeEvent public static void started(ServerStartedEvent e){MatchManager.recover(e.getServer());}
-    @SubscribeEvent public static void stopping(ServerStoppingEvent e){dev.exodus.party.PartyService.clear(e.getServer());ExodusSavedData.get(e.getServer()).setDirty();}
+    @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.HIGHEST) public static void stopping(ServerStoppingEvent e){MatchManager.suspend(e.getServer());}
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent e){if(e.getEntity() instanceof ServerPlayer p){MatchManager.login(p);dev.exodus.map.MatchMapService.updateNow(p.server);}}
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e){if(e.getEntity() instanceof ServerPlayer p){MatchManager.logout(p);dev.exodus.map.MatchMapService.updateNow(p.server);}}
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e){if(e.getEntity() instanceof ServerPlayer p){MatchManager.dimensionChanged(p,e.getFrom(),e.getTo());dev.exodus.map.MatchMapService.updateNow(p.server);}}

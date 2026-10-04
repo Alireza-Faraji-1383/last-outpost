@@ -27,14 +27,14 @@ approved zombie/soldier behavior. Real multiplayer performance remains manual ac
 - The current cap is 8 match players; zero or too many players abort before world changes.
 - Base allocation is preflighted before border/structure/teleport changes. It runs incrementally at 2 candidates per tick and times out after 120 seconds.
 - Allocation is shuffled and seeded; centers must remain inside the safe border area, avoid unsuitable biomes/liquids/caves, have no more than 6 blocks of footprint height variation, be at least 250 blocks apart, and avoid persisted old Exodus bases.
-- Match border is 2000x2000 around the chosen center. Preserve and restore the previous border on stop, failed commit, automatic ending, or restart recovery.
+- Match border is 2000x2000 around the chosen center. Preserve and restore the previous border on stop, failed commit, automatic ending, or abandoned STARTING/ENDING recovery.
 - Structure pool defaults to `exodus:starter_base`; missing entries warn, an empty pool aborts. Development fallback is explicit and disabled by default.
 - Structure rotation is NONE. Track base center, structure origin, spawn position, owner UUID/name, and structure ID.
 - Disconnect or leaving the match dimension starts a 120-second grace period. Returning within the period resumes play; after expiry the player has left and returns only as a spectator.
 - New non-members entering the dimension mid-match become Spectator. When the match ends, match players and auto-spectators become Survival; initial spectators retain their game mode.
 - When no active/pending players remain, end automatically. On stop/end, all associated online users return to the match dimension's current world spawn. Offline users receive a persistent pending return on next login.
 - Structures are not deleted on stop. Persist a registry of placed Exodus bases so later matches do not overlap them.
-- On server restart, an active/starting match is not resumed: recover to IDLE, restore the saved border, retain placed structures/base registry, and log clearly.
+- On server restart, resume committed RUNNING matches with their saved roster, bases, session clock, inventory, parties, events, and teleporter state. Wait for the first returning active player, then grant remaining match players the configured reconnect grace. Uncommitted STARTING or interrupted ENDING matches recover to IDLE and restore the saved border. Do not reconstruct already-cleared legacy matches without an explicit user request.
 - All player-facing text and logs are English.
 - Starting a committed match permanently clears match players' inventory, armor, offhand, and Ender Chest.
 - The Exodus Teleporter uses nine fixed match-bound components, a configurable countdown/radius/capacity, and announces the nearest eligible winners at expiry.

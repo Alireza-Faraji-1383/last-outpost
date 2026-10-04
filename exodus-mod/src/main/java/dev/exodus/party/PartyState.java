@@ -1,6 +1,7 @@
 package dev.exodus.party;
 
 import java.util.*;
+import net.minecraft.nbt.*;
 
 /** Match-owned, server-thread state. Deadlines are captured and never extended by reconnects. */
 public final class PartyState {
@@ -56,6 +57,16 @@ public final class PartyState {
     public List<Set<UUID>> tick(long now){
         invitations.entrySet().removeIf(e->e.getValue().expiry()<=now);
         List<Set<UUID>> ended=new ArrayList<>();for(var owner:new ArrayList<>(parties.keySet())){var p=parties.get(owner);if(p.departure>=0&&now>=p.departure)ended.add(remove(owner));}return List.copyOf(ended);
+    }
+    public CompoundTag save(){
+        var t=new CompoundTag();t.putUUID("match",matchId);t.putInt("capacity",capacity);
+        var list=new ListTag();parties.forEach((owner,p)->{var a=new CompoundTag();a.putUUID("owner",owner);a.putLong("departure",p.departure);var members=new ListTag();for(UUID id:p.members){var m=new CompoundTag();m.putUUID("id",id);members.add(m);}a.put("members",members);list.add(a);});t.put("parties",list);
+        var invites=new ListTag();for(var i:invitations.values()){var a=new CompoundTag();a.putUUID("owner",i.owner());a.putUUID("target",i.target());a.putLong("expiry",i.expiry());invites.add(a);}t.put("invitations",invites);return t;
+    }
+    public static PartyState load(CompoundTag t){
+        var s=new PartyState(t.getUUID("match"),t.getInt("capacity"));
+        for(Tag raw:t.getList("parties",Tag.TAG_COMPOUND)){var a=(CompoundTag)raw;UUID owner=a.getUUID("owner");s.create(owner);var p=s.parties.get(owner);p.departure=a.getLong("departure");for(Tag m:a.getList("members",Tag.TAG_COMPOUND)){UUID id=((CompoundTag)m).getUUID("id");p.members.add(id);s.membership.put(id,owner);}}
+        for(Tag raw:t.getList("invitations",Tag.TAG_COMPOUND)){var a=(CompoundTag)raw;UUID owner=a.getUUID("owner"),target=a.getUUID("target");s.invitations.put(new InvitationKey(owner,target),new Invitation(owner,target,a.getLong("expiry")));}return s;
     }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException(message);}
 }

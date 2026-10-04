@@ -13,6 +13,29 @@
 
 Real two-client multiplayer behavior is not considered verified until this checklist is completed by the user.
 
+## Committed match restart (Exodus 0.7.3)
+
+Start a new match with two clients. Keep identifiable loot, create a party, and record
+the match day, base locations, selected respawn, event progress, and teleporter timer.
+Close the world/server normally, restart it, and join again. `/exodus status` must
+show RUNNING with the original match and bases; inventory must remain intact and
+players already in the match dimension must retain their saved positions. Session
+time, party invitations/separation, active event progress, rare claims, event drops,
+and the active teleporter must survive. Shutdown time must not count as match time.
+
+After restarting a dedicated server, leave it empty longer than two minutes before
+joining. The match, enemies, teleporter countdown, and event-drop lifetime must wait
+for the first returning active player. Once that player returns, the other members
+have the configured disconnect grace (normally 120 seconds); later arrivals become
+spectators. Initial spectators keep their game mode. `/exodus stop` still ends the
+resumed match and restores the previous border. STARTING/ENDING interruptions still
+recover to IDLE. Already-cleared legacy matches are not reconstructed.
+
+Automated checks: full Gradle test/build and isolated `exodus_restart` Forge GameTest
+cover serialized reload, return/login, inventory preservation, party continuity,
+reconnect grace, paused countdown/drop expiry, enemy preservation while waiting,
+and explicit stop. This is not a real two-client shutdown/restart acceptance result.
+
 ## Dry Plains world generation (2026-09-30)
 
 Restart Minecraft after installing the updated Exodus JAR and create a fresh world for world-generation verification. Existing saves and already-generated terrain are retained; their saved generator settings are not migrated.

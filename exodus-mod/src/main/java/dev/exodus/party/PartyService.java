@@ -11,14 +11,13 @@ import java.util.*;
 
 /** Forge boundary for pure party state. All callers run on the server thread. */
 public final class PartyService {
-    private static final Map<MinecraftServer,PartyState> STATES=new WeakHashMap<>();
     private PartyService(){}
     public static PartyState state(MinecraftServer server){
         var d=ExodusSavedData.get(server);
-        if(d.state!=MatchState.RUNNING||d.matchId==null){STATES.remove(server);throw new IllegalStateException("Parties require a running Exodus match.");}
-        var s=STATES.get(server);if(s==null||!s.matchId().equals(d.matchId)){s=new PartyState(d.matchId,ExodusConfig.PARTY_CAPACITY.get());STATES.put(server,s);}return s;
+        if(d.state!=MatchState.RUNNING||d.matchId==null){throw new IllegalStateException("Parties require a running Exodus match.");}
+        var s=d.parties;if(s==null||!s.matchId().equals(d.matchId)){s=new PartyState(d.matchId,ExodusConfig.PARTY_CAPACITY.get());d.parties=s;d.setDirty();}return s;
     }
-    private static PartyState current(MinecraftServer server){var d=ExodusSavedData.get(server);var s=STATES.get(server);return d.state==MatchState.RUNNING&&s!=null&&s.matchId().equals(d.matchId)?s:null;}
+    private static PartyState current(MinecraftServer server){var d=ExodusSavedData.get(server);var s=d.parties;return d.state==MatchState.RUNNING&&s!=null&&s.matchId().equals(d.matchId)?s:null;}
     public static boolean sameParty(MinecraftServer server,UUID a,UUID b){var s=current(server);return s!=null&&s.sameParty(a,b);}
     public static Optional<UUID> teammate(MinecraftServer server,UUID player){var s=current(server);return s==null?Optional.empty():s.teammate(player);}
     private static void eligible(ServerPlayer player){if(!MatchManager.isActiveMatchPlayer(player)||!player.isAlive())throw new IllegalStateException("Only active living match players can use party commands.");}
@@ -56,7 +55,7 @@ public final class PartyService {
         for(var ended:s.tick(now(server))){notifyAll(server,ended,"Party separation complete. You can now damage each other.");changed=true;}
         if(changed)changed(server);
     }
-    public static void clear(MinecraftServer server){STATES.remove(server);}
+    public static void clear(MinecraftServer server){var d=ExodusSavedData.get(server);d.parties=null;d.setDirty();}
     private static void changed(MinecraftServer server){MatchMapService.updateNow(server);dev.exodus.session.MatchBossBarService.tick(server);}
     private static void notifyAll(MinecraftServer server,Set<UUID> members,String message){for(UUID id:members){var p=server.getPlayerList().getPlayer(id);if(p!=null)notice(p,message);}}
     private static void notice(ServerPlayer p,String message){p.sendSystemMessage(Component.literal(message));}
