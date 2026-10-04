@@ -15,6 +15,7 @@ public final class ExodusMod {
 
     public ExodusMod() {
         dev.exodus.network.ExodusNetwork.register();
+        dev.exodus.party.PartyGunIntegration.register();
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ExodusSupplyRegistry.register(modBus);
         ExodusTeleporterRegistry.register(modBus);

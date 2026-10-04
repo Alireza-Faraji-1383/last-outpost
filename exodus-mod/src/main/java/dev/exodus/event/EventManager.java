@@ -3,6 +3,7 @@ package dev.exodus.event;
 import com.mojang.logging.LogUtils;
 import dev.exodus.*;
 import dev.exodus.event.domain.*;
+import dev.exodus.party.PartyService;
 import dev.exodus.supply.event.EventAirdropService;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -26,6 +27,7 @@ public final class EventManager {
     public static void tick(MinecraftServer server){
         var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.matchId==null)return;
         var r=runtime(server);long now=d.session.elapsedTicks;
+        partyChanged(server);
         for(var run:new ArrayList<>(r.runs)){
             var p=run.progress();
             if(p.hunter()!=null&&p.outcome()==ObjectiveProgress.Outcome.ACTIVE){
@@ -49,7 +51,7 @@ public final class EventManager {
         var r=runtime(server);
         return switch(def.objective()){
             case KILL_ENTITY -> !players(server).isEmpty()&&r.runs.stream().noneMatch(run->run.progress().hunter()==null);
-            case KILL_PLAYER -> availablePairs(server,r).size()>=2;
+            case KILL_PLAYER -> !legalPairs(server,r).isEmpty();
             case WORLD_DROP -> EventAirdropService.available(server,def);
         };
     }
@@ -57,6 +59,11 @@ public final class EventManager {
         return players(server).stream().filter(p->r.runs.stream().filter(run->run.progress().hunter()!=null&&run.progress().participants().contains(p.getUUID())).count()<ExodusConfig.EVENT_MAX_TARGETED_PER_PLAYER.get()).toList();
     }
     public static boolean start(MinecraftServer server,String id){return EventCatalog.get(id).map(def->start(server,def,true)).orElse(false);}
+    private static List<ManhuntPartyPolicy.Pair> legalPairs(MinecraftServer server,Runtime r){return ManhuntPartyPolicy.pairs(availablePairs(server,r).stream().map(ServerPlayer::getUUID).toList(),(a,b)->PartyService.sameParty(server,a,b));}
+    public static void partyChanged(MinecraftServer server){
+        var r=RUNTIME.get(server);if(r==null)return;
+        for(var run:new ArrayList<>(r.runs)){var p=run.progress();if(p.hunter()!=null&&p.outcome()==ObjectiveProgress.Outcome.ACTIVE&&PartyService.sameParty(server,p.hunter(),p.prey())){p.failAlliance();finish(server,r,run);}}
+    }
     private static boolean start(MinecraftServer server,EventDefinition def,boolean admin){
         var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.matchId==null)return false;
         int day=day(server);if(admin?def.oneTime()&&d.session.events.schedule.history().containsKey(def.id()):!d.session.events.schedule.eligible(def,day))return false;
@@ -65,7 +72,7 @@ public final class EventManager {
         if(def.objective()==EventDefinition.Objective.WORLD_DROP)return EventAirdropService.queue(server,def);
         ObjectiveProgress progress;
         if(def.objective()==EventDefinition.Objective.KILL_ENTITY){Set<UUID> ids=new HashSet<>();players(server).forEach(p->ids.add(p.getUUID()));progress=ObjectiveProgress.hunt(ids,d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_ZOMBIE_SECONDS.get())*20L,value(def.targetCount(),ExodusConfig.EVENT_ZOMBIE_GOAL.get()));}
-        else{var pair=new ArrayList<>(availablePairs(server,r));Collections.shuffle(pair,r.random);progress=ObjectiveProgress.manhunt(pair.get(0).getUUID(),pair.get(1).getUUID(),d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_MANHUNT_SECONDS.get())*20L);}
+        else{var pairs=legalPairs(server,r);if(pairs.isEmpty())return false;var pair=pairs.get(r.random.nextInt(pairs.size()));progress=ObjectiveProgress.manhunt(pair.hunter(),pair.prey(),d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_MANHUNT_SECONDS.get())*20L);}
         var run=new Run(UUID.randomUUID(),def,progress,value(def.rewardEmeralds(),ExodusConfig.EVENT_ZOMBIE_REWARD.get()),value(def.hunterEmeralds(),ExodusConfig.EVENT_HUNTER_REWARD.get()),value(def.preyEmeralds(),ExodusConfig.EVENT_PREY_REWARD.get()));r.runs.add(run);
         d.session.events.schedule.started(def,day);d.setDirty();
         for(UUID id:progress.participants()){var p=server.getPlayerList().getPlayer(id);if(p!=null)p.sendSystemMessage(Component.literal(def.title()+" started. "+(progress.hunter()==null?"Kill "+progress.goal()+" zombies before time runs out.":id.equals(progress.hunter())?"You are the hunter. Your target is "+name(server,progress.prey())+".":"You are the prey. Survive until the timer expires.")));}

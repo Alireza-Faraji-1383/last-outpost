@@ -5,6 +5,7 @@ import java.util.List;
 
 public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.IntValue PARTY_CAPACITY, PARTY_INVITE_SECONDS, PARTY_DEPARTURE_SECONDS, PARTY_MAP_INTERVAL_TICKS;
     public static final ForgeConfigSpec.BooleanValue EVENTS_ENABLED;
     public static final ForgeConfigSpec.DoubleValue EVENT_DAILY_CHANCE;
     public static final ForgeConfigSpec.IntValue EVENT_DAY_TICKS, EVENT_ZOMBIE_GOAL, EVENT_ZOMBIE_SECONDS,
@@ -49,6 +50,12 @@ public final class ExodusConfig {
 
     static {
         var b = new ForgeConfigSpec.Builder();
+        b.push("parties");
+        PARTY_CAPACITY=b.comment("The approved party format is two players.").defineInRange("capacity",2,2,2);
+        PARTY_INVITE_SECONDS=b.defineInRange("invitationSeconds",30,1,300);
+        PARTY_DEPARTURE_SECONDS=b.defineInRange("departureSeconds",30,1,300);
+        PARTY_MAP_INTERVAL_TICKS=b.defineInRange("mapRefreshTicks",20,5,200);
+        b.pop();
         b.push("events");
         EVENTS_ENABLED=b.define("enabled",true);
         EVENT_DAILY_CHANCE=b.defineInRange("dailyRandomChance",.60,0.0,1.0);

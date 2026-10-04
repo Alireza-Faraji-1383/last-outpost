@@ -67,3 +67,6 @@ Preserve inherited local edits. English text/logs. No third-party mods. Version 
 - Code remains in codex/exodus-event-system worktree; no main merge or commit.
 - Human two-client and visual acceptance remains pending.
 
+
+## Subsequent main integration
+On 2026-10-04, the user requested outstanding worktree integration and all future work directly on main. Event source was saved in 65252d3 and merged into main in f3d696d, then preserved in the party release 0.7.0. The earlier worktree-only delivery note above describes the original delivery.

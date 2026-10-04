@@ -1,10 +1,15 @@
 package dev.exodus.map;
 import dev.exodus.*;import dev.exodus.network.ExodusNetwork;import dev.exodus.teleporter.item.*;import net.minecraft.core.*;import net.minecraft.server.*;import net.minecraft.server.level.*;import net.minecraft.world.entity.item.ItemEntity;import java.util.*;
 public final class MatchMapService {
- private static final Map<MinecraftServer,Map<UUID,List<MapLocation>>> LAST=new WeakHashMap<>();
+ private record View(List<MapLocation> locations,Set<UUID> teammates){}
+ private static final Map<MinecraftServer,Map<UUID,View>> LAST=new WeakHashMap<>();
  private static final Map<MinecraftServer,Long> REVISION=new WeakHashMap<>();private MatchMapService(){}
  public static void tick(MinecraftServer server){
-  var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.session.elapsedTicks%20!=1)return;
+  var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.session.elapsedTicks%ExodusConfig.PARTY_MAP_INTERVAL_TICKS.get()!=1)return;
+  updateNow(server);
+ }
+ public static void updateNow(MinecraftServer server){
+  var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.matchId==null)return;
   var level=server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new net.minecraft.resources.ResourceLocation(d.dimension)));if(level==null)return;
   JourneyMapRadarPolicy.enforce(server,level.dimension());
   var previous=LAST.computeIfAbsent(server,k->new HashMap<>());previous.keySet().removeIf(id->server.getPlayerList().getPlayer(id)==null);
@@ -22,8 +27,11 @@ public final class MatchMapService {
    List<MapLocation> owned=new ArrayList<>();var base=d.bases.get(p.getUUID());if(base!=null)owned.add(new MapLocation("base:"+d.session.baseMarkerIds.computeIfAbsent(p.getUUID(),id->UUID.randomUUID()),"My Base",MapLocation.Kind.PLAYER_BASE,base.center().getX(),base.center().getY(),base.center().getZ()));
    for(var device:d.session.devices.values())if(p.getUUID().equals(device.owner())){BlockPos pos=BlockPos.of(device.position());owned.add(new MapLocation("device:"+device.position(),"Claimed Device",MapLocation.Kind.DEVICE,pos.getX(),pos.getY(),pos.getZ()));}
    boolean privateVisible=MapProjectionPolicy.privateVisible(d.associations.get(p.getUUID()),d.session.eliminated.contains(p.getUUID()));
-   List<MapLocation> visible=MapProjectionPolicy.project(pub,hidden,privateVisible?owned:List.of(),privateVisible?seen:Set.of());
-   if(!visible.equals(previous.get(p.getUUID()))){ExodusNetwork.send(p,new MatchMapSnapshot(d.mapEpoch,revision,d.matchId,d.dimension,d.centerX,d.centerZ,d.session.borderSize,false,visible));previous.put(p.getUUID(),visible);}
+   List<MapLocation> visible=new ArrayList<>(MapProjectionPolicy.project(pub,hidden,privateVisible?owned:List.of(),privateVisible?seen:Set.of()));
+   Set<UUID> teammates=new HashSet<>();
+   dev.exodus.party.PartyService.teammate(server,p.getUUID()).ifPresent(id->{var mate=server.getPlayerList().getPlayer(id);if(mate!=null&&TeammateProjectionPolicy.visible(playing,MatchManager.isActiveMatchPlayer(mate),mate.isAlive(),p.serverLevel()==mate.serverLevel())){teammates.add(id);visible.add(new MapLocation("teammate:"+id,mate.getGameProfile().getName(),MapLocation.Kind.TEAMMATE,mate.getBlockX(),mate.getBlockY(),mate.getBlockZ()));}});
+   var view=new View(List.copyOf(visible),Set.copyOf(teammates));
+   if(!view.equals(previous.get(p.getUUID()))){ExodusNetwork.send(p,new MatchMapSnapshot(d.mapEpoch,revision,d.matchId,d.dimension,d.centerX,d.centerZ,d.session.borderSize,false,view.locations(),view.teammates()));previous.put(p.getUUID(),view);}
   }d.setDirty();
  }
  public static void refresh(MinecraftServer server,UUID player){var previous=LAST.get(server);if(previous!=null)previous.remove(player);}

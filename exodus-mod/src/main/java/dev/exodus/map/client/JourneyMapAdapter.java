@@ -27,7 +27,7 @@ public final class JourneyMapAdapter implements IClientPlugin {
  }
  private static MapPolygon square(int x,int z,int h){return new MapPolygon(new BlockPos(x-h,64,z-h),new BlockPos(x+h,64,z-h),new BlockPos(x+h,64,z+h),new BlockPos(x-h,64,z+h));}
  private static String icon(MapLocation.Kind kind){return switch(kind){case ACTIVE_DEVICE,RARE_ITEM,AIRDROP->"star";case CITY,RUSSIAN_BASE,AMERICAN_BASE->"base";case DEVICE->"device";default->"camp";};}
- private static int color(MapLocation.Kind kind){return switch(kind){case RUSSIAN_BASE->0xF25A5A;case AMERICAN_BASE->0x60A5FA;case CITY->0xF5F5F5;case PLAYER_BASE->0x6EE7A0;case DEVICE->0xC4B5FD;case ACTIVE_DEVICE->0xE879F9;case RARE_ITEM->0xFACC15;case AIRDROP->0x55AAFF;default->0xFDBA74;};}
+ private static int color(MapLocation.Kind kind){return switch(kind){case TEAMMATE->0x55FF55;case RUSSIAN_BASE->0xF25A5A;case AMERICAN_BASE->0x60A5FA;case CITY->0xF5F5F5;case PLAYER_BASE->0x6EE7A0;case DEVICE->0xC4B5FD;case ACTIVE_DEVICE->0xE879F9;case RARE_ITEM->0xFACC15;case AIRDROP->0x55AAFF;default->0xFDBA74;};}
  private void disconnect(){renderState.disconnect();clear();}
  private void clear(){if(api!=null)api.removeAll("exodus");markers.clear();border=null;outside=null;drawn=null;}
 }

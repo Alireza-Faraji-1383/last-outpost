@@ -22,8 +22,12 @@ public final class MatchNameTagClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void renderName(RenderNameTagEvent event) {
         var entity = event.getEntity();
-        if (STATE.hidden(entity.level().dimension().location().toString(),
-                entity instanceof Player, entity == Minecraft.getInstance().player)) {
+        String dimension=entity.level().dimension().location().toString();
+        if(entity instanceof Player && STATE.teammate(dimension,entity.getUUID())){
+            event.setContent(event.getContent().copy().withStyle(net.minecraft.ChatFormatting.GREEN));
+            event.setResult(Event.Result.ALLOW);
+        } else if (STATE.hidden(dimension,
+                entity instanceof Player, entity == Minecraft.getInstance().player,entity.getUUID())) {
             event.setResult(Event.Result.DENY);
         }
     }

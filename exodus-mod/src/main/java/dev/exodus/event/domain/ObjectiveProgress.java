@@ -34,6 +34,7 @@ public final class ObjectiveProgress {
         if(outcome==Outcome.ACTIVE && now>=deadline)outcome=hunter==null?Outcome.FAILED:Outcome.PREY_WON;
     }
     public void cancel() { if(outcome==Outcome.ACTIVE)outcome=Outcome.CANCELLED; }
+    public void failAlliance() { if(outcome==Outcome.ACTIVE && hunter!=null)outcome=Outcome.FAILED; }
     public Set<UUID> winners() { return switch(outcome) {
         case COMPLETED -> Set.copyOf(contributors);case HUNTER_WON -> Set.of(hunter);case PREY_WON -> Set.of(prey);default -> Set.of();
     }; }
