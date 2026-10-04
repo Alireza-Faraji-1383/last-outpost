@@ -1,0 +1,8 @@
+{
+  "scope": "GLOBAL",
+  "weight": 40,
+  "minDay": 1,
+  "cooldownDays": 1,
+  "objective": "KILL_ENTITY",
+  "title": "Zombie Hunt"
+}

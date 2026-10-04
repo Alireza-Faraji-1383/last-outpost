@@ -5,6 +5,13 @@ import java.util.List;
 
 public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.BooleanValue EVENTS_ENABLED;
+    public static final ForgeConfigSpec.DoubleValue EVENT_DAILY_CHANCE;
+    public static final ForgeConfigSpec.IntValue EVENT_DAY_TICKS, EVENT_ZOMBIE_GOAL, EVENT_ZOMBIE_SECONDS,
+            EVENT_ZOMBIE_REWARD, EVENT_MANHUNT_SECONDS, EVENT_HUNTER_REWARD, EVENT_PREY_REWARD,
+            EVENT_MAX_TARGETED_PER_PLAYER, EVENT_DROP_SECONDS, EVENT_MAX_DROPS,
+            EVENT_PLACEMENT_ATTEMPTS, EVENT_CANDIDATES_PER_TICK, EVENT_RETRY_SECONDS,
+            EVENT_DROP_MIN_DISTANCE, EVENT_DROP_MAX_DISTANCE;
     public static final ForgeConfigSpec.IntValue HORSE_GLOBAL_CAP,HORSE_BATCH_MIN,HORSE_BATCH_MAX,
             HORSE_SCHEDULE_WINDOW,HORSE_SPAWN_MIN,HORSE_SPAWN_MAX,HORSE_PLACEMENT_ATTEMPTS;
     public static final ForgeConfigSpec.IntValue ENEMY_AMMO_MIN, ENEMY_AMMO_MAX, ENEMY_EMERALD_MIN, ENEMY_EMERALD_MAX;
@@ -42,6 +49,25 @@ public final class ExodusConfig {
 
     static {
         var b = new ForgeConfigSpec.Builder();
+        b.push("events");
+        EVENTS_ENABLED=b.define("enabled",true);
+        EVENT_DAILY_CHANCE=b.defineInRange("dailyRandomChance",.60,0.0,1.0);
+        EVENT_DAY_TICKS=b.defineInRange("matchDayTicks",24000,20,240000);
+        EVENT_ZOMBIE_GOAL=b.defineInRange("zombieKillGoal",50,1,10000);
+        EVENT_ZOMBIE_SECONDS=b.defineInRange("zombieDurationSeconds",90,1,3600);
+        EVENT_ZOMBIE_REWARD=b.defineInRange("zombieContributorEmeralds",10,0,4096);
+        EVENT_MANHUNT_SECONDS=b.defineInRange("manhuntDurationSeconds",300,1,3600);
+        EVENT_HUNTER_REWARD=b.defineInRange("hunterEmeralds",16,0,4096);
+        EVENT_PREY_REWARD=b.defineInRange("preyEmeralds",8,0,4096);
+        EVENT_MAX_TARGETED_PER_PLAYER=b.defineInRange("maxTargetedEventsPerPlayer",1,1,8);
+        EVENT_DROP_SECONDS=b.comment("Ordinary event-drop lifetime; the unique Core drop lasts until claimed or match cleanup.").defineInRange("dropLifetimeSeconds",600,30,86400);
+        EVENT_MAX_DROPS=b.defineInRange("maxActiveDrops",8,1,64);
+        EVENT_PLACEMENT_ATTEMPTS=b.defineInRange("dropPlacementAttempts",128,1,2048);
+        EVENT_CANDIDATES_PER_TICK=b.defineInRange("dropCandidatesPerTick",2,1,8);
+        EVENT_RETRY_SECONDS=b.defineInRange("milestoneRetrySeconds",10,1,300);
+        EVENT_DROP_MIN_DISTANCE=b.defineInRange("dropMinimumPlayerDistance",64,1,512);
+        EVENT_DROP_MAX_DISTANCE=b.defineInRange("dropMaximumPlayerDistance",256,1,1024);
+        b.pop();
         b.push("horseSpawning");
         HORSE_GLOBAL_CAP=b.defineInRange("globalCap",10,0,100);
         HORSE_BATCH_MIN=b.defineInRange("batchMinimum",3,1,20);

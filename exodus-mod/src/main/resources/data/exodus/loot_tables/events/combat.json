@@ -1,0 +1,41 @@
+{
+  "pools": [
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/weapons_elite",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 4,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/ammunition",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/armor",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    },
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "name": "exodus:chests/bonus/attachments",
+          "type": "minecraft:loot_table"
+        }
+      ]
+    }
+  ],
+  "type": "minecraft:chest"
+}

@@ -15,7 +15,7 @@ import dev.exodus.wasteland.lostcities.LostCitiesIntegration;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public final class ExodusEvents {
-    @SubscribeEvent public static void reload(AddReloadListenerEvent e){e.addListener(new SupplyCatalogReloadListener());}
+    @SubscribeEvent public static void reload(AddReloadListenerEvent e){e.addListener(new SupplyCatalogReloadListener());e.addListener(new dev.exodus.event.EventCatalogReloadListener());}
     @SubscribeEvent public static void commands(RegisterCommandsEvent e){ExodusCommands.register(e.getDispatcher());}
     @SubscribeEvent public static void tick(TickEvent.ServerTickEvent e){if(e.phase==TickEvent.Phase.END){MatchManager.tick(e.getServer());ArenaPreparationService.tick(e.getServer());dev.exodus.enemy.EnemySpawnService.tick(e.getServer());dev.exodus.horse.HorseSpawnService.tick(e.getServer());}}
     @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST) public static void aboutToStart(ServerAboutToStartEvent e){LostCitiesIntegration.registerDimensionAfterConfigsLoaded();}

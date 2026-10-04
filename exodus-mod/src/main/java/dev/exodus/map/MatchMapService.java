@@ -9,6 +9,7 @@ public final class MatchMapService {
   JourneyMapRadarPolicy.enforce(server,level.dimension());
   var previous=LAST.computeIfAbsent(server,k->new HashMap<>());previous.keySet().removeIf(id->server.getPlayerList().getPlayer(id)==null);
   List<MapLocation> pub=new ArrayList<>(),hidden=new ArrayList<>();
+  pub.addAll(dev.exodus.supply.event.EventAirdropService.markers(server));
   for(MapLocation l:d.session.locations)if(l.kind()==MapLocation.Kind.CITY||l.kind()==MapLocation.Kind.RUSSIAN_BASE||l.kind()==MapLocation.Kind.AMERICAN_BASE)pub.add(l);else hidden.add(l);
   for(var base:d.bases.values())hidden.add(new MapLocation("base:"+d.session.baseMarkerIds.computeIfAbsent(base.uuid(),id->UUID.randomUUID()),"Discovered Camp",MapLocation.Kind.PLAYER_BASE,base.center().getX(),base.center().getY(),base.center().getZ()));
   for(var device:d.session.devices.values()){BlockPos pos=BlockPos.of(device.position());hidden.add(new MapLocation("device:"+device.position(),"Discovered Device",MapLocation.Kind.DEVICE,pos.getX(),pos.getY(),pos.getZ()));}

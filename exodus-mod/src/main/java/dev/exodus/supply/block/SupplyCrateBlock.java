@@ -21,6 +21,12 @@ public class SupplyCrateBlock extends BaseEntityBlock {
     public SupplyCrateBlock(Properties properties) { super(properties); }
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new SupplyCrateBlockEntity(pos,state);}
     @Override public RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
-    @Override public InteractionResult use(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof SupplyCrateBlockEntity crate)player.openMenu(crate);return InteractionResult.sidedSuccess(level.isClientSide);}
+    @Override public InteractionResult use(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof SupplyCrateBlockEntity crate){if(crate.eventDropId()!=null&&(!(player instanceof net.minecraft.server.level.ServerPlayer p)||!dev.exodus.MatchManager.isActiveMatchPlayer(p)))return InteractionResult.FAIL;player.openMenu(crate);}return InteractionResult.sidedSuccess(level.isClientSide);}
+    @Override public void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean moving){
+        if(!state.is(replacement.getBlock())&&level.getBlockEntity(pos) instanceof SupplyCrateBlockEntity crate&&crate.eventDropId()!=null&&level instanceof ServerLevel server){
+            var data=dev.exodus.ExodusSavedData.get(server.getServer());
+            if(data.state==dev.exodus.MatchState.RUNNING&&data.session.events.drops.containsKey(crate.eventDropId())&&crate.coreDrop())net.minecraft.world.Containers.dropContents(level,pos,crate);
+        }super.onRemove(state,level,pos,replacement,moving);
+    }
     @Nullable @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return level instanceof ServerLevel&&type==dev.exodus.supply.ExodusSupplyRegistry.SUPPLY_CRATE_ENTITY.get()?(l,p,s,b)->SupplyCrateBlockEntity.tick((ServerLevel)l,p,s,(SupplyCrateBlockEntity)b):null;}
 }
