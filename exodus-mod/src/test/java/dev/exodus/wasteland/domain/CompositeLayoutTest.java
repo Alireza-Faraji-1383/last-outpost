@@ -13,12 +13,12 @@ class CompositeLayoutTest {
     void factionBaseUsesTheApprovedFourPieceGeometry() {
         CompositeDefinition base = CompositeDefinition.faction("russian");
 
-        assertEquals(new CompositeDefinition.Size(57, 20, 60), base.total());
+        assertEquals(new CompositeDefinition.Size(57, 21, 60), base.total());
         assertEquals(List.of(
-                new CompositeDefinition.Part("russian_base_1", new CompositeDefinition.Size(29, 20, 30), 0, 0, 0),
-                new CompositeDefinition.Part("russian_base_2", new CompositeDefinition.Size(28, 20, 30), 29, 0, 0),
-                new CompositeDefinition.Part("russian_base_3", new CompositeDefinition.Size(29, 20, 30), 0, 0, 30),
-                new CompositeDefinition.Part("russian_base_4", new CompositeDefinition.Size(28, 20, 30), 29, 0, 30)
+                new CompositeDefinition.Part("russian_base_1", new CompositeDefinition.Size(29, 21, 30), 0, 0, 0),
+                new CompositeDefinition.Part("russian_base_2", new CompositeDefinition.Size(28, 21, 30), 29, 0, 0),
+                new CompositeDefinition.Part("russian_base_3", new CompositeDefinition.Size(29, 21, 30), 0, 0, 30),
+                new CompositeDefinition.Part("russian_base_4", new CompositeDefinition.Size(28, 21, 30), 29, 0, 30)
         ), base.parts());
         assertTrue(CompositeLayout.hasExactCoverage(base));
     }

@@ -293,7 +293,7 @@ public final class ArenaPreparationService {
     }
 
     private static int height(PlacementPlan.Entry entry) {
-        return entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 20;
+        return entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 21;
     }
 
     private static int randomInclusive(java.util.Random random, int minimum, int maximum) {

@@ -16,10 +16,10 @@ class StructureAssetContractTest {
     @Test
     void factionPiecesAndCampsHaveTheApprovedSizes() throws Exception {
         for (String nation : List.of("russian", "american")) {
-            assertSize(nation + "_base_1", 29, 20, 30);
-            assertSize(nation + "_base_2", 28, 20, 30);
-            assertSize(nation + "_base_3", 29, 20, 30);
-            assertSize(nation + "_base_4", 28, 20, 30);
+            assertSize(nation + "_base_1", 29, 21, 30);
+            assertSize(nation + "_base_2", 28, 21, 30);
+            assertSize(nation + "_base_3", 29, 21, 30);
+            assertSize(nation + "_base_4", 28, 21, 30);
         }
         assertSize("abandoned_camp_01", 11, 11, 16);
         assertSize("occupied_camp_01", 11, 11, 16);

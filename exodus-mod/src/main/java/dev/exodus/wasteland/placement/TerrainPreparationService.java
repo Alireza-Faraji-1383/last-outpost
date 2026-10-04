@@ -214,7 +214,7 @@ public final class TerrainPreparationService {
 
     private static int height(PlacementPlan.Entry entry) {
         return entry.kind() == PlacementPlan.Kind.ABANDONED_CAMP
-                || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 20;
+                || entry.kind() == PlacementPlan.Kind.OCCUPIED_CAMP ? 11 : 21;
     }
 
     private static int foundationDepth(ServerLevel level, BlockPos.MutableBlockPos cursor, String poiId,

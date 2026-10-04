@@ -18,7 +18,7 @@ class SurfacePoiCatalogTest {
         var russian = pois.stream().filter(p -> p.id().equals("russian_base")).findFirst().orElseThrow();
         assertEquals(57, russian.width());
         assertEquals(60, russian.depth());
-        assertEquals(20, russian.height());
+        assertEquals(21, russian.height());
         assertEquals(4, russian.parts().size());
         assertTrue(russian.parts().stream().allMatch(p -> p.kind() == PlacementPlan.Kind.RUSSIAN_BASE));
     }
