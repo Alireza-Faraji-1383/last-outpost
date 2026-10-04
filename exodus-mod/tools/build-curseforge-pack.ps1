@@ -1,19 +1,20 @@
 [CmdletBinding()]
 param(
     [string]$MinecraftRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$OutputPath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path "dist\Project-Exodus-0.4.0-CurseForge.zip")
+    [string]$OutputPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 $packName = "Project Exodus"
-$packVersion = "0.4.0"
-$customModName = "exodus-0.4.0.jar"
+$packVersion = (Select-String -LiteralPath (Join-Path $PSScriptRoot "..\gradle.properties") -Pattern '^mod_version=').Line.Split('=')[1]
+if (!$OutputPath) { $OutputPath = Join-Path $MinecraftRoot "dist\Project-Exodus-$packVersion-CurseForge.zip" }
+$customModName = "exodus-$packVersion.jar"
 $excludedMods = @("jei-1.20.1-forge-15.56.0.205.jar")
 $overrideDirectories = @("config", "defaultconfigs", "kubejs", "recruits")
 $buildRoot = Join-Path $MinecraftRoot "exodus-mod\build\curseforge-pack"
 $stagingRoot = Join-Path $buildRoot "staging"
-$reportPath = Join-Path (Split-Path $OutputPath -Parent) "Project-Exodus-0.4.0-CurseForge-build-report.json"
+$reportPath = Join-Path (Split-Path $OutputPath -Parent) "Project-Exodus-$packVersion-CurseForge-build-report.json"
 
 $curseForgeFiles = @(
     @{ name = "[1.20.1] SecurityCraft v1.10.2.1.jar"; fingerprint = 2421776137; projectID = 64760; fileID = 8336490 }

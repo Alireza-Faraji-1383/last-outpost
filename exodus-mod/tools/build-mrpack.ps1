@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$MinecraftRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
-    [string]$OutputPath = (Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path "dist\Project-Exodus-0.4.0.mrpack"),
+    [string]$OutputPath = "",
     [switch]$SkipDownloadVerification
 )
 
@@ -9,13 +9,14 @@ $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
 $packName = "Project Exodus"
-$packVersion = "0.4.0"
+$packVersion = (Select-String -LiteralPath (Join-Path $PSScriptRoot "..\gradle.properties") -Pattern '^mod_version=').Line.Split('=')[1]
+if (!$OutputPath) { $OutputPath = Join-Path $MinecraftRoot "dist\Project-Exodus-$packVersion.mrpack" }
 $excludedMods = @("jei-1.20.1-forge-15.56.0.205.jar")
 $overrideDirectories = @("config", "defaultconfigs", "kubejs", "recruits", "tacz")
 $buildRoot = Join-Path $MinecraftRoot "exodus-mod\build\mrpack"
 $stagingRoot = Join-Path $buildRoot "staging"
 $verificationRoot = Join-Path $buildRoot "verification"
-$reportPath = Join-Path (Split-Path $OutputPath -Parent) "Project-Exodus-0.4.0-build-report.json"
+$reportPath = Join-Path (Split-Path $OutputPath -Parent) "Project-Exodus-$packVersion-build-report.json"
 
 function Get-FileDigestRecord {
     param([System.IO.FileInfo]$File)
@@ -61,7 +62,7 @@ $lookup = Invoke-RestMethod `
     -Method Post `
     -Uri "https://api.modrinth.com/v2/version_files" `
     -ContentType "application/json" `
-    -Headers @{ "User-Agent" = "Project-Exodus-Mrpack-Builder/0.4.0" } `
+    -Headers @{ "User-Agent" = "Project-Exodus-Mrpack-Builder/$packVersion" } `
     -Body $requestBody
 
 $manifestFiles = [System.Collections.Generic.List[object]]::new()
@@ -166,7 +167,7 @@ if (-not $SkipDownloadVerification) {
     foreach ($entry in $verifiedManifest.files) {
         $destination = Join-Path $verificationRoot ($entry.path -replace '/', [System.IO.Path]::DirectorySeparatorChar)
         New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
-        Invoke-WebRequest -Uri $entry.downloads[0] -OutFile $destination -Headers @{ "User-Agent" = "Project-Exodus-Mrpack-Builder/0.4.0" }
+        Invoke-WebRequest -Uri $entry.downloads[0] -OutFile $destination -Headers @{ "User-Agent" = "Project-Exodus-Mrpack-Builder/$packVersion" }
         $actualSha1 = (Get-FileHash -LiteralPath $destination -Algorithm SHA1).Hash.ToLowerInvariant()
         $actualSha512 = (Get-FileHash -LiteralPath $destination -Algorithm SHA512).Hash.ToLowerInvariant()
         if ($actualSha1 -ne $entry.hashes.sha1 -or $actualSha512 -ne $entry.hashes.sha512) {

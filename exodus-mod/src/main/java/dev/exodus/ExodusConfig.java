@@ -5,6 +5,8 @@ import java.util.List;
 
 public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
+    public static final ForgeConfigSpec.IntValue HORSE_GLOBAL_CAP,HORSE_BATCH_MIN,HORSE_BATCH_MAX,
+            HORSE_SCHEDULE_WINDOW,HORSE_SPAWN_MIN,HORSE_SPAWN_MAX,HORSE_PLACEMENT_ATTEMPTS;
     public static final ForgeConfigSpec.IntValue ENEMY_AMMO_MIN, ENEMY_AMMO_MAX, ENEMY_EMERALD_MIN, ENEMY_EMERALD_MAX;
     public static final ForgeConfigSpec.DoubleValue ENEMY_EMERALD_CHANCE;
     public static final ForgeConfigSpec.IntValue ENEMY_PLAYER_CAP, ENEMY_GLOBAL_CAP,
@@ -40,6 +42,15 @@ public final class ExodusConfig {
 
     static {
         var b = new ForgeConfigSpec.Builder();
+        b.push("horseSpawning");
+        HORSE_GLOBAL_CAP=b.defineInRange("globalCap",10,0,100);
+        HORSE_BATCH_MIN=b.defineInRange("batchMinimum",3,1,20);
+        HORSE_BATCH_MAX=b.defineInRange("batchMaximum",5,1,20);
+        HORSE_SCHEDULE_WINDOW=b.comment("Two global opportunities per world day, one in each 6000-tick daytime half.").defineInRange("scheduleWindowTicks",3000,1,5999);
+        HORSE_SPAWN_MIN=b.defineInRange("spawnMinimum",48,1,256);
+        HORSE_SPAWN_MAX=b.defineInRange("spawnMaximum",96,1,256);
+        HORSE_PLACEMENT_ATTEMPTS=b.defineInRange("placementAttemptsPerHorse",8,1,32);
+        b.pop();
         b.push("enemyLoot");
         ENEMY_AMMO_MIN=b.defineInRange("ammoMinimum",16,1,64);
         ENEMY_AMMO_MAX=b.defineInRange("ammoMaximum",32,1,64);
@@ -78,9 +89,9 @@ public final class ExodusConfig {
         ZOMBIE_SOLDIER_RELEASE=b.defineInRange("zombieSoldierReleaseRadius",16,1,128);
         ZOMBIE_DOOR_BREAK_TICKS=b.defineInRange("zombieDoorBreakTicks",240,240,2400);
         ENEMY_DEVICE_MOVEMENT_SPEED=b.defineInRange("deviceMovementSpeed",1.0,.1,2.0);
-        ZOMBIE_EMERALD_CHANCE=b.defineInRange("zombieEmeraldChance",.01,0.0,1.0);
-        ZOMBIE_GUNPOWDER_CHANCE=b.defineInRange("zombieGunpowderChance",.03,0.0,1.0);
-        ZOMBIE_QUARTZ_CHANCE=b.defineInRange("zombieQuartzChance",.03,0.0,1.0);
+        ZOMBIE_EMERALD_CHANCE=b.defineInRange("zombieEmeraldChance",.08,0.0,1.0);
+        ZOMBIE_GUNPOWDER_CHANCE=b.comment("Chance of one additional gunpowder; one gunpowder is always dropped.").defineInRange("zombieGunpowderChance",.60,0.0,1.0);
+        ZOMBIE_QUARTZ_CHANCE=b.defineInRange("zombieQuartzChance",.30,0.0,1.0);
         b.pop();
         b.push("foundation");
         MATCH_RADIUS = b.defineInRange("matchRadius", 1000, 128, 30000);

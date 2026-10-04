@@ -67,9 +67,10 @@ class EnemyPolicyTest {
         assertFalse(EnemyAdmission.allowed(false, false, false));
     }
     @Test void zombieLootRollsAreIndependentAndBounded() {
-        assertEquals(new ZombieLootPolicy.Drops(1, 1, 1), ZombieLootPolicy.roll(0, 0, 0, .01, .03, .03));
-        assertEquals(new ZombieLootPolicy.Drops(0, 0, 0), ZombieLootPolicy.roll(.01, .03, .03, .01, .03, .03));
-        assertEquals(new ZombieLootPolicy.Drops(0, 1, 0), ZombieLootPolicy.roll(.5, .02, .5, .01, .03, .03));
+        assertEquals(new ZombieLootPolicy.Drops(1, 2, 1), ZombieLootPolicy.roll(0, 0, 0, .08, .60, .30));
+        assertEquals(new ZombieLootPolicy.Drops(0, 1, 0), ZombieLootPolicy.roll(.08, .60, .30, .08, .60, .30));
+        assertEquals(new ZombieLootPolicy.Drops(0, 2, 0), ZombieLootPolicy.roll(.5, .59, .5, .08, .60, .30));
+        assertEquals(new ZombieLootPolicy.Drops(0, 1, 0), ZombieLootPolicy.roll(.99, .99, .99, 0, 0, 0));
     }
     @Test void cleanupRequiresDistanceAndNoCombat() {
         assertFalse(EnemyRangePolicy.farForCleanup(128*128,128,false));

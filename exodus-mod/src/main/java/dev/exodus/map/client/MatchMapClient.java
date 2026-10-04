@@ -5,7 +5,7 @@ public final class MatchMapClient {
  private static final MapSessionGate GATE=new MapSessionGate();private static Consumer<MatchMapSnapshot> sink;private static Runnable clear=()->{},retry=()->{};private static MatchMapSnapshot latest;
  private MatchMapClient(){}
  public static void attach(Consumer<MatchMapSnapshot> renderer,Runnable cleaner,Runnable retryRenderer){sink=renderer;clear=cleaner;retry=retryRenderer;if(latest!=null)sink.accept(latest);}
- public static void receive(MatchMapSnapshot snapshot){if(!GATE.accept(snapshot.epoch(),snapshot.revision()))return;latest=snapshot;if(sink!=null)sink.accept(snapshot);}
- @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event){GATE.reset();latest=null;clear.run();}
+ public static void receive(MatchMapSnapshot snapshot){if(!GATE.accept(snapshot.epoch(),snapshot.revision()))return;latest=snapshot;MatchNameTagClient.receive(snapshot);if(sink!=null)sink.accept(snapshot);}
+ @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event){GATE.reset();latest=null;MatchNameTagClient.reset();clear.run();}
  @SubscribeEvent public static void tick(TickEvent.ClientTickEvent e){if(e.phase==TickEvent.Phase.END)retry.run();}
 }

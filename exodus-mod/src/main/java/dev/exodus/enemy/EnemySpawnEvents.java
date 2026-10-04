@@ -1,6 +1,8 @@
 package dev.exodus.enemy;
 
 import dev.exodus.*;
+import dev.exodus.horse.HorseSpawnService;
+import net.minecraft.world.entity.animal.horse.Horse;
 import dev.exodus.wasteland.lostcities.LostCitiesIntegration;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.*;
@@ -51,18 +53,24 @@ public final class EnemySpawnEvents {
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void position(MobSpawnEvent.PositionCheck event) {
-        if (controlled(event.getLevel()) && !EnemyTags.managed(event.getEntity()) && !exception(event.getSpawnType()))
+        if (controlled(event.getLevel()) && !EnemyTags.managed(event.getEntity()) && !HorseSpawnService.managed(event.getEntity()) && !exception(event.getSpawnType()))
             event.setResult(Event.Result.DENY);
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void finalizeSpawn(MobSpawnEvent.FinalizeSpawn event) {
         if (!controlled(event.getLevel())) return;
-        if (EnemyTags.managed(event.getEntity())) return;
+        if (EnemyTags.managed(event.getEntity()) || HorseSpawnService.managed(event.getEntity())) return;
         if (exception(event.getSpawnType()) || ADMIN_COMMAND.get()) event.getEntity().getPersistentData().putBoolean(EnemyTags.ADMIN,true);
         else event.setSpawnCancelled(true);
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void join(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide && HorseSpawnService.managed(event.getEntity())) {
+            var data=ExodusSavedData.get(((ServerLevel)event.getLevel()).getServer());
+            if (HorseSpawnService.allowed(event.getEntity(),data)) HorseSpawnService.join((Horse)event.getEntity());
+            else event.setCanceled(true);
+            return;
+        }
         if (!controlled(event.getLevel()) || !(event.getEntity() instanceof Mob mob)) return;
         var server=((ServerLevel)event.getLevel()).getServer();
         var data=ExodusSavedData.get(server);
@@ -80,6 +88,7 @@ public final class EnemySpawnEvents {
         if (current) EnemySpawnService.join(mob);
     }
     @SubscribeEvent public static void leave(EntityLeaveLevelEvent event) {
+        if (!event.getLevel().isClientSide && HorseSpawnService.managed(event.getEntity())) HorseSpawnService.leave((Horse)event.getEntity());
         if (controlled(event.getLevel()) && event.getEntity() instanceof Mob mob && EnemyTags.managed(mob)) EnemySpawnService.leave(mob);
     }
     @SubscribeEvent(priority=EventPriority.LOWEST)
@@ -106,5 +115,5 @@ public final class EnemySpawnEvents {
         if (drops.gunpowder()>0) event.getDrops().add(new ItemEntity(mob.level(),mob.getX(),mob.getY(),mob.getZ(),new ItemStack(Items.GUNPOWDER,drops.gunpowder())));
         if (drops.quartz()>0) event.getDrops().add(new ItemEntity(mob.level(),mob.getX(),mob.getY(),mob.getZ(),new ItemStack(Items.QUARTZ,drops.quartz())));
     }
-    @SubscribeEvent public static void stop(ServerStoppingEvent event) { EnemySpawnService.reset(); ADMIN_COMMAND.remove(); }
+    @SubscribeEvent public static void stop(ServerStoppingEvent event) { EnemySpawnService.reset(); HorseSpawnService.reset(); ADMIN_COMMAND.remove(); }
 }

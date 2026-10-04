@@ -8,6 +8,7 @@ import re
 import sys
 import zipfile
 import copy
+import runpy
 from pathlib import Path
 
 INSTANCE = Path(sys.argv[1])
@@ -83,7 +84,7 @@ all_guns = COMMON + VALUABLE + SNIPERS + HEAVY
 for gun in all_guns:
     index, data = gun_data(gun)
     scope = 'scope_standard_8x' if gun in SNIPERS else None
-    amount = 1 if gun == 'rpg7' else 100 if gun == 'minigun' else data['ammo_amount'] * 2
+    amount = read_pack(GUNS / 'index/ammo' / (data['ammo'].split(':')[1] + '.json'))['stack_size']
     loot('chests/guns/' + gun.replace(':','/'), [pool([gun_item(gun, scope)]), pool([ammo(data['ammo'], amount)])])
 
 for tier, names in [('common', COMMON), ('valuable', COMMON + VALUABLE + SNIPERS + HEAVY), ('elite', COMMON + VALUABLE + SNIPERS + HEAVY)]:
@@ -99,7 +100,22 @@ for name in armor_zip.namelist():
         continue
     kind = Path(name).stem
     parts = json.loads(armor_zip.read(name))
-    defense = sum(v.get('defense', 0) for v in parts.values() if isinstance(v, dict))
+    # LR Armor's server reload listener loads this namespace/path and syncs clients.
+    iron = {'helmet': (2, 165), 'chestplate': (6, 240), 'leggings': (5, 225), 'boots': (2, 195)}
+    for slot, (minimum_defense, minimum_durability) in iron.items():
+        if slot in parts:
+            parts[slot]['defense'] = max(parts[slot].get('defense', 0), minimum_defense)
+            parts[slot]['maxDurability'] = max(parts[slot].get('maxDurability', 0), minimum_durability)
+    override = ROOT.parent / 'lrarmor/armor_data' / (kind + '.json')
+    override.parent.mkdir(parents=True, exist_ok=True)
+    override.write_text(json.dumps(parts, separators=(',', ':')) + '\n', encoding='utf-8')
+    # KubeJS supplies a higher-priority runtime/distribution override independent of mod load order.
+    runtime_override = INSTANCE / 'kubejs/data/lrarmor/armor_data' / (kind + '.json')
+    runtime_override.parent.mkdir(parents=True, exist_ok=True)
+    runtime_override.write_bytes(override.read_bytes())
+    # Keep rarity based on original power so raising the floor does not flatten tiers.
+    original_parts = json.loads(armor_zip.read(name))
+    defense = sum(v.get('defense', 0) for v in original_parts.values() if isinstance(v, dict))
     weight = 1 if defense >= 20 else 4 if defense >= 13 else 10
     for slot in ['helmet', 'chestplate', 'leggings', 'boots']:
         if f'assets/lrarmor/models/item/{kind}_{slot}.json' in armor_zip.namelist():
@@ -111,13 +127,16 @@ loot('chests/bonus/equipment', [pool([
     item('sophisticatedbackpacks:stack_upgrade_tier_1', weight=2), item('sophisticatedbackpacks:pickup_upgrade', weight=4),
     item('constructionwand:iron_wand', weight=6), item('minecraft:spyglass', weight=10),
     item('supplementaries:rope', dict(min=8,max=16), weight=8), item('supplementaries:sack', weight=5),
-    item('lrtactical:flash_shield', weight=2),
-    item('tacz:attachment', weight=10, tag='{AttachmentId:"tacz:sight_t1"}'),
-    item('tacz:attachment', weight=4, tag='{AttachmentId:"tacz:scope_standard_8x"}')])])
+    item('lrtactical:flash_shield', weight=2)])])
+
+expanded = runpy.run_path(str(Path(__file__).with_name('expanded-equipment.py')))
+expanded['generate'](INSTANCE, ROOT, item, pool, loot, write)
 
 resources = [('iron_ingot', 20, 8, 16), ('diamond', 6, 1, 3), ('gold_ingot', 10, 4, 10), ('copper_ingot', 16, 8, 20), ('redstone', 14, 8, 20), ('coal', 16, 8, 20), ('amethyst_shard', 8, 4, 12)]
 for tier, scale, rare in [('common',1,.06), ('standard',1.5,.09), ('valuable',2,.16), ('elite',3,.22)]:
-    loot('chests/bonus/resources_' + tier, [pool([item('minecraft:' + n, dict(min=max(1,int(lo*scale)), max=int(hi*scale)), w) for n,w,lo,hi in resources], dict(min=2,max=4)), pool([item('minecraft:obsidian',dict(min=2,max=6),6),item('minecraft:ender_pearl',dict(min=1,max=3),3),item('minecraft:blaze_rod',dict(min=1,max=2),2)], chance=rare)])
+    # Existing resource amounts were curated separately; equipment generation must preserve them.
+    if not (ROOT / ('loot_tables/chests/bonus/resources_' + tier + '.json')).exists():
+        loot('chests/bonus/resources_' + tier, [pool([item('minecraft:' + n, dict(min=max(1,int(lo*scale)), max=int(hi*scale)), w) for n,w,lo,hi in resources], dict(min=2,max=4)), pool([item('minecraft:obsidian',dict(min=2,max=6),6),item('minecraft:ender_pearl',dict(min=1,max=3),3),item('minecraft:blaze_rod',dict(min=1,max=2),2)], chance=rare)])
     emerald_chance, emerald_count = (.15, dict(min=2,max=6)) if tier in ['common','standard'] else (.25,dict(min=6,max=15))
     loot('chests/bonus/emeralds_' + tier, [pool([item('minecraft:emerald',emerald_count)],chance=emerald_chance)])
 
@@ -126,11 +145,9 @@ for family in families:
     path = ROOT / ('loot_tables/chests/' + family + '.json')
     t = json.loads(path.read_text(encoding="utf-8"))
     # Generator is idempotent: remove only its owned bonus references.
-    t['pools'] = [p for p in t['pools'] if not any(e.get('name','').startswith(('exodus:chests/bonus/resources_', 'exodus:chests/bonus/emeralds_', 'exodus:chests/bonus/armor','exodus:chests/bonus/equipment')) for e in p['entries'])]
+    t['pools'] = [p for p in t['pools'] if not any(e.get('name','').startswith(('exodus:chests/bonus/resources_', 'exodus:chests/bonus/emeralds_', 'exodus:chests/bonus/armor','exodus:chests/bonus/equipment','exodus:chests/bonus/attachments','exodus:chests/bonus/zero_contact')) for e in p['entries'])]
     tier = family.split('/')[-1] if family.startswith('general/') else 'standard'
-    # Improve the low tier's base pool rather than retaining junk-heavy selection.
-    if family == 'general/common':
-        t['pools'][0] = pool([item('minecraft:bread',dict(min=3,max=8),10),item('minecraft:cooked_beef',dict(min=2,max=6),8),item('minecraft:torch',dict(min=8,max=20),8),item('minecraft:iron_ingot',dict(min=8,max=16),12),item('minecraft:coal',dict(min=8,max=16),10),item('minecraft:oak_planks',dict(min=16,max=32),8),item('minecraft:gold_ingot',dict(min=3,max=8),6)],dict(min=4,max=7))
+    # Preserve the currently curated base pool, including its resource amounts.
     for p in t['pools']:
         p['entries']=[e for e in p['entries'] if e.get('name') not in {'minecraft:emerald','minecraft:emerald_block','minecraft:ender_pearl','minecraft:blaze_rod','minecraft:obsidian'}]
     if not family.startswith('general/') and family!='weapons':
@@ -148,7 +165,14 @@ for family in families:
                 p['conditions'] = [dict(condition='minecraft:random_chance',chance={'common':.35,'standard':.50,'valuable':.65,'elite':.75}[tier])]
             if family.startswith('general/') and e.get('name') == 'exodus:chests/bonus/ammunition':
                 p['conditions'] = [dict(condition='minecraft:random_chance',chance=.95)]
-    t['pools'] += [pool([ref('chests/bonus/resources_'+tier)]),pool([ref('chests/bonus/emeralds_'+tier)]),pool([ref('chests/bonus/armor')],chance={'common':.18,'standard':.28,'valuable':.40,'elite':.55}[tier]),pool([ref('chests/bonus/equipment')],chance=.22 if tier in ['common','standard'] else .4)]
+    t['pools'] += [pool([ref('chests/bonus/resources_'+tier)]),pool([ref('chests/bonus/emeralds_'+tier)]),pool([ref('chests/bonus/armor')],chance={'common':.35,'standard':.50,'valuable':.65,'elite':.80}[tier])]
+    equipment_chance=.22 if tier in ['common','standard'] else .4
+    attachment_chance={'common':.45,'standard':.60,'valuable':.75,'elite':.90}[tier]
+    zero_chance={'common':.18,'standard':.28,'valuable':.40,'elite':.55}[tier]
+    # Attachments get an independent slot; equipment and Zero Contact share the
+    # other slot, preserving both marginal chances and the 27-slot budget.
+    t['pools'] += [pool([ref('chests/bonus/attachments')],chance=attachment_chance),
+                  pool([ref('chests/bonus/equipment',round(equipment_chance*100)),ref('chests/bonus/zero_contact',round(zero_chance*100))],chance=round(equipment_chance+zero_chance,2))]
     write('loot_tables/chests/'+family,t)
 
 # Medical items are a single registered item carrying the verified ConsumableId.
