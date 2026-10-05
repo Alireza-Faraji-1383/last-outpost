@@ -1,8 +1,11 @@
 {
+  "title": "Manhunt",
   "scope": "TARGETED",
-  "weight": 15,
-  "minDay": 2,
-  "cooldownDays": 1,
   "objective": "KILL_PLAYER",
-  "title": "Manhunt"
+  "participantSelector": "RANDOM_PAIR",
+  "minDay": 3,
+  "priority": 1,
+  "chancePercent": 30,
+  "chanceIncreasePercent": 30,
+  "cooldownDays": 0
 }

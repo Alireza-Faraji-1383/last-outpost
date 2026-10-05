@@ -1,6 +1,8 @@
 package dev.exodus.event;
 
 import dev.exodus.event.domain.EventSchedule;
+import dev.exodus.event.domain.EventChanceState;
+import dev.exodus.event.domain.EventDayClock;
 import dev.exodus.event.domain.ObjectiveProgress;
 import net.minecraft.nbt.*;
 import java.util.*;
@@ -12,11 +14,15 @@ public final class EventSavedState {
     public record Drop(UUID id,UUID entity,long position,long expires,String title,boolean core,boolean landed){}
     public record Terminal(UUID id,String definition,ObjectiveProgress.Outcome outcome,long tick){}
     public final EventSchedule schedule=new EventSchedule();
+    public final EventChanceState chances=new EventChanceState();
+    public final EventDayClock clock=new EventDayClock();
     public final Map<UUID,Drop> drops=new LinkedHashMap<>();
     public final Set<String> paidRewards=new HashSet<>();
     public final Map<UUID,Terminal> outcomes=new LinkedHashMap<>();
     public CompoundTag save(){
         var tag=new CompoundTag();tag.putInt("lastDay",schedule.lastRolledDay());
+        var clockState=clock.snapshot();var clockTag=new CompoundTag();clockTag.putInt("day",clockState.day());clockTag.putInt("morning",clockState.morningDay());clockTag.putInt("noon",clockState.noonDay());tag.put("clock",clockTag);
+        var chancesTag=new ListTag();chances.snapshot().forEach((key,misses)->{var t=new CompoundTag();t.putString("definition",key.definition());if(key.player()!=null)t.putUUID("player",key.player());t.putInt("misses",misses);chancesTag.add(t);});tag.put("chances",chancesTag);
         var active=new ListTag();for(var run:runs){var t=new CompoundTag();t.putUUID("id",run.id());t.putString("definition",new com.google.gson.Gson().toJson(run.definition()));t.put("progress",run.progress().save());t.putInt("huntReward",run.huntReward());t.putInt("hunterReward",run.hunterReward());t.putInt("preyReward",run.preyReward());active.add(t);}tag.put("runs",active);
         var pending=new ListTag();pendingDrops.forEach(id->pending.add(StringTag.valueOf(id)));tag.put("pendingDrops",pending);
         var history=new ListTag();schedule.history().forEach((id,day)->{var t=new CompoundTag();t.putString("id",id);t.putInt("day",day);history.add(t);});tag.put("history",history);
@@ -26,6 +32,9 @@ public final class EventSavedState {
     }
     public static EventSavedState load(CompoundTag tag){
         var state=new EventSavedState();Map<String,Integer> history=new HashMap<>();
+        if(tag.contains("clock",Tag.TAG_COMPOUND)){var t=tag.getCompound("clock");state.clock.restore(new EventDayClock.Snapshot(t.getInt("day"),t.getInt("morning"),t.getInt("noon")));}
+        else if(tag.getInt("lastDay")>0){int oldDay=tag.getInt("lastDay");state.clock.restore(new EventDayClock.Snapshot(oldDay,oldDay,oldDay));}
+        Map<EventChanceState.Key,Integer> misses=new HashMap<>();for(Tag raw:tag.getList("chances",Tag.TAG_COMPOUND)){var t=(CompoundTag)raw;misses.put(new EventChanceState.Key(t.getString("definition"),t.hasUUID("player")?t.getUUID("player"):null),t.getInt("misses"));}state.chances.restore(misses);
         for(Tag raw:tag.getList("history",Tag.TAG_COMPOUND)){var t=(CompoundTag)raw;history.put(t.getString("id"),Math.max(1,t.getInt("day")));}state.schedule.restore(tag.getInt("lastDay"),history);
         for(Tag raw:tag.getList("drops",Tag.TAG_COMPOUND)){var t=(CompoundTag)raw;if(t.hasUUID("id")&&t.hasUUID("entity")){var d=new Drop(t.getUUID("id"),t.getUUID("entity"),t.getLong("pos"),t.getLong("expires"),t.getString("title"),t.getBoolean("core"),t.getBoolean("landed"));state.drops.put(d.id(),d);}}
         for(Tag raw:tag.getList("paid",Tag.TAG_STRING))state.paidRewards.add(raw.getAsString());

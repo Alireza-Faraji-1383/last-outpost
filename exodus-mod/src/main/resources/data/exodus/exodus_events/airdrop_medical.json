@@ -1,9 +1,11 @@
 {
-  "weight": 25,
-  "lootTable": "exodus:events/medical",
   "title": "Medical Airdrop",
-  "cooldownDays": 2,
-  "minDay": 1,
   "scope": "GLOBAL",
-  "objective": "WORLD_DROP"
+  "objective": "WORLD_DROP",
+  "minDay": 2,
+  "priority": 8,
+  "chancePercent": 30,
+  "chanceIncreasePercent": 30,
+  "cooldownDays": 0,
+  "lootTable": "exodus:events/medical"
 }

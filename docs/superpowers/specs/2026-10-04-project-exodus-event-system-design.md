@@ -1,5 +1,8 @@
 # Project Exodus Event System
 
+# Scheduling update
+The approved October 5 [daily events design](2026-10-05-project-exodus-daily-events-design.md) supersedes this document's elapsed-day random scheduling, cooperative Zombie Hunt, and initial ordinary airdrop catalog. Existing unique-Core, radio isolation, rewards, UI, and lifecycle requirements continue to apply.
+
 ## Intent and approved scope
 Build a match-owned extensible event foundation and three initial event families: Zombie Hunt, Manhunt, and supply airdrops. Reuse the existing Forge match lifecycle, map integration, supply entity/crate, and teleporter component authority. Preserve current local changes and radio behavior. No third-party mod changes.
 

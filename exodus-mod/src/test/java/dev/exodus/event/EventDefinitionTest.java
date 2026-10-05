@@ -8,6 +8,26 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventDefinitionTest {
+    @Test void shippedEventsHaveApprovedUnlockOrderAndIndependentChanceSettings()throws Exception{
+        var expected=Map.of("airdrop_rpg",List.of(8,1,10,20),"airdrop_sniper",List.of(7,2,10,20),"airdrop_armor",List.of(6,3,10,20),
+                "airdrop_combat_plus",List.of(5,4,10,20),"airdrop_medical_plus",List.of(4,5,10,20),"airdrop_combat",List.of(3,6,20,20),
+                "airdrop_equipment",List.of(2,7,30,30),"airdrop_medical",List.of(2,8,30,30),"manhunt",List.of(3,1,30,30),"zombie_hunt",List.of(2,2,30,30));
+        for(var entry:expected.entrySet()){
+            var d=EventDefinitionParser.parse("exodus:"+entry.getKey(),JsonParser.parseString(Files.readString(Path.of("src/main/resources/data/exodus/exodus_events/"+entry.getKey()+".json"))).getAsJsonObject());
+            assertEquals(entry.getValue(),List.of(d.minDay(),d.priority(),d.chancePercent(),d.chanceIncreasePercent()),entry.getKey());
+            if(entry.getKey().equals("zombie_hunt")){assertEquals(EventDefinition.Scope.TARGETED,d.scope());assertEquals(EventDefinition.ParticipantSelector.SINGLE_ACTIVE,d.participantSelector());}
+        }
+    }
+    @Test void upgradedLootIncludesGuaranteedPowerfulArmorAndMedicalUpgrade()throws Exception{
+        var armor=JsonParser.parseString(Files.readString(Path.of("src/main/resources/data/exodus/loot_tables/events/armor.json"))).getAsJsonObject();
+        assertEquals(4,armor.getAsJsonArray("pools").size());
+        for(var pool:armor.getAsJsonArray("pools")){
+            var item=pool.getAsJsonObject().getAsJsonArray("entries").get(0).getAsJsonObject();assertTrue(item.get("name").getAsString().startsWith("lrarmor:defender_"));
+            var enchants=item.getAsJsonArray("functions").asList().stream().map(JsonElement::getAsJsonObject).filter(f->f.get("function").getAsString().equals("minecraft:set_enchantments")).findFirst().orElseThrow().getAsJsonObject("enchantments");
+            assertEquals(4,enchants.get("minecraft:protection").getAsInt());assertEquals(3,enchants.get("minecraft:unbreaking").getAsInt());
+        }
+        assertTrue(Files.readString(Path.of("src/main/resources/data/exodus/loot_tables/events/medical_plus.json")).contains("minecraft:enchanted_golden_apple"));
+    }
     @Test void datapackObjectiveOverridesArePreservedAndValidateSelectors(){
         var json=JsonParser.parseString("""
                 {"title":"Custom Hunt","scope":"GLOBAL","objective":"KILL_ENTITY","durationSeconds":45,

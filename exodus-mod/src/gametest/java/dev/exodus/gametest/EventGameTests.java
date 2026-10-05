@@ -33,6 +33,45 @@ import java.util.*;
 public final class EventGameTests {
     private static final Map<UUID,List<Packet<?>>> PACKETS=new HashMap<>();
     @GameTest(template="smoke",timeoutTicks=100)
+    public static void personalNoonDrawAndRestart(GameTestHelper h){
+        var level=h.getLevel();var server=level.getServer();var data=ExodusSavedData.get(server);
+        var catalog=EventCatalog.all();boolean enabled=ExodusConfig.EVENTS_ENABLED.get();long oldTime=level.getDayTime();
+        List<ServerPlayer> players=new ArrayList<>();
+        try{
+            data.state=MatchState.RUNNING;data.matchId=UUID.randomUUID();data.dimension=level.dimension().location().toString();data.session=new MatchSessionState();data.session.matchId=data.matchId;data.session.borderSize=2000;
+            for(int i=0;i<5;i++){var player=mock(level,"noon"+i);player.setGameMode(GameType.SURVIVAL);data.associations.put(player.getUUID(),Association.MATCH_PLAYER);data.session.roster.add(player.getUUID());players.add(player);}
+            var hunt=dev.exodus.event.domain.EventDefinitionParser.parse("exodus:personal",com.google.gson.JsonParser.parseString("""
+                {"title":"Personal Hunt","scope":"TARGETED","objective":"KILL_ENTITY","participantSelector":"SINGLE_ACTIVE","minDay":2,"priority":2,"chancePercent":100,"chanceIncreasePercent":30}
+                """).getAsJsonObject());
+            var man=dev.exodus.event.domain.EventDefinitionParser.parse("exodus:pairs",com.google.gson.JsonParser.parseString("""
+                {"title":"Private Manhunt","scope":"TARGETED","objective":"KILL_PLAYER","participantSelector":"RANDOM_PAIR","minDay":3,"priority":1,"chancePercent":100,"chanceIncreasePercent":30}
+                """).getAsJsonObject());
+            EventCatalog.replace(List.of(hunt,man));ExodusConfig.EVENTS_ENABLED.set(true);
+            level.setDayTime(6000);EventManager.tick(server);h.assertTrue(data.session.events.runs.isEmpty(),"No automatic day-one missions");
+            level.setDayTime(30000);EventManager.tick(server);
+            h.assertTrue(data.session.events.runs.size()==5,"Day two grants independent hunts to all five winners");
+            h.assertTrue(data.session.events.runs.stream().allMatch(run->run.progress().participants().size()==1),"Every hunt has one independent participant");
+            var first=players.get(0);var second=players.get(1);
+            EventManager.entityDeath(first,UUID.randomUUID(),"minecraft:zombie");
+            h.assertTrue(data.session.events.runs.stream().filter(run->run.progress().participants().contains(first.getUUID())).findFirst().orElseThrow().progress().kills()==1,"Owner's kill counts");
+            h.assertTrue(data.session.events.runs.stream().filter(run->run.progress().participants().contains(second.getUUID())).findFirst().orElseThrow().progress().kills()==0,"Other player's count stays independent");
+            data.session.elapsedTicks=1800;EventManager.tick(server);h.assertTrue(data.session.events.runs.isEmpty(),"Hunts expire independently without noon replay");
+            data.parties=new dev.exodus.party.PartyState(data.matchId,2);data.parties.create(first.getUUID());data.parties.invite(first.getUUID(),second.getUUID(),1800,600);data.parties.accept(second.getUUID(),first.getUUID(),1801);
+            level.setDayTime(54000);EventManager.tick(server);
+            h.assertTrue(data.session.events.runs.size()==3,"Day three makes two pairs and a leftover hunt");
+            h.assertTrue(data.session.events.runs.stream().filter(run->run.progress().hunter()!=null).count()==2,"Several simultaneous Manhunts");
+            h.assertTrue(data.session.events.runs.stream().filter(run->run.progress().hunter()!=null).noneMatch(run->data.parties.sameParty(run.progress().hunter(),run.progress().prey())),"Teammates never hunt each other");
+            var saved=EventSavedState.load(data.session.events.save());EventManager.cleanup(server);data.session.events=saved;EventManager.tick(server);
+            h.assertTrue(data.session.events.runs.size()==3,"Reload does not redraw the same noon");
+            h.assertTrue(saved.chances.snapshot().size()==5,"Missed per-definition chances survive restart");
+            h.succeed();
+        }finally{
+            EventManager.cleanup(server);data.state=MatchState.IDLE;data.matchId=null;data.associations.clear();data.session=new MatchSessionState();data.parties=null;
+            EventCatalog.replace(catalog);ExodusConfig.EVENTS_ENABLED.set(enabled);level.setDayTime(oldTime);
+            for(var player:players){server.getPlayerList().remove(player);player.discard();}PACKETS.clear();
+        }
+    }
+    @GameTest(template="smoke",timeoutTicks=100)
     public static void deliveryAndObjectives(GameTestHelper h){
         var level=h.getLevel();var server=level.getServer();var d=ExodusSavedData.get(server);
         var oldCatalog=EventCatalog.all();boolean oldEnabled=ExodusConfig.EVENTS_ENABLED.get();ExodusConfig.EVENTS_ENABLED.set(false);

@@ -7,12 +7,12 @@ public final class ExodusConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.IntValue PARTY_CAPACITY, PARTY_INVITE_SECONDS, PARTY_DEPARTURE_SECONDS, PARTY_MAP_INTERVAL_TICKS;
     public static final ForgeConfigSpec.BooleanValue EVENTS_ENABLED;
-    public static final ForgeConfigSpec.DoubleValue EVENT_DAILY_CHANCE;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> EVENT_DROP_CAPS;
     public static final ForgeConfigSpec.IntValue EVENT_DAY_TICKS, EVENT_ZOMBIE_GOAL, EVENT_ZOMBIE_SECONDS,
             EVENT_ZOMBIE_REWARD, EVENT_MANHUNT_SECONDS, EVENT_HUNTER_REWARD, EVENT_PREY_REWARD,
             EVENT_MAX_TARGETED_PER_PLAYER, EVENT_DROP_SECONDS, EVENT_MAX_DROPS,
             EVENT_PLACEMENT_ATTEMPTS, EVENT_CANDIDATES_PER_TICK, EVENT_RETRY_SECONDS,
-            EVENT_DROP_MIN_DISTANCE, EVENT_DROP_MAX_DISTANCE;
+            EVENT_DROP_MIN_DISTANCE, EVENT_DROP_MAX_DISTANCE, EVENT_NOON_TICK, EVENT_NIGHT_TICK;
     public static final ForgeConfigSpec.IntValue HORSE_GLOBAL_CAP,HORSE_BATCH_MIN,HORSE_BATCH_MAX,
             HORSE_SCHEDULE_WINDOW,HORSE_SPAWN_MIN,HORSE_SPAWN_MAX,HORSE_PLACEMENT_ATTEMPTS;
     public static final ForgeConfigSpec.IntValue ENEMY_AMMO_MIN, ENEMY_AMMO_MAX, ENEMY_EMERALD_MIN, ENEMY_EMERALD_MAX;
@@ -58,8 +58,10 @@ public final class ExodusConfig {
         b.pop();
         b.push("events");
         EVENTS_ENABLED=b.define("enabled",true);
-        EVENT_DAILY_CHANCE=b.defineInRange("dailyRandomChance",.60,0.0,1.0);
-        EVENT_DAY_TICKS=b.defineInRange("matchDayTicks",24000,20,240000);
+        EVENT_DAY_TICKS=b.comment("World-clock day length for event scheduling; Minecraft uses 24000 ticks.").defineInRange("matchDayTicks",24000,20,240000);
+        EVENT_NOON_TICK=b.defineInRange("noonTick",6000,1,23999);
+        EVENT_NIGHT_TICK=b.defineInRange("nightTick",12000,2,24000);
+        EVENT_DROP_CAPS=b.comment("First day:maximum ordinary morning drops. Core milestones are additional.").defineList("morningDropCaps",List.of("2:1","4:2","6:3","8:4"),dev.exodus.event.domain.DailyEventDraw::validCap);
         EVENT_ZOMBIE_GOAL=b.defineInRange("zombieKillGoal",50,1,10000);
         EVENT_ZOMBIE_SECONDS=b.defineInRange("zombieDurationSeconds",90,1,3600);
         EVENT_ZOMBIE_REWARD=b.defineInRange("zombieContributorEmeralds",10,0,4096);

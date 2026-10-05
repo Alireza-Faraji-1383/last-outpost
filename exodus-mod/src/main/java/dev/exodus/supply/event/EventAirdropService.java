@@ -88,6 +88,7 @@ public final class EventAirdropService {
         if(def.core())d.teleporter.rareClaims().add(TeleporterComponent.DIMENSIONAL_CORE);
         d.session.events.drops.put(id,new EventSavedState.Drop(id,entity.getUUID(),position.asLong(),expires,def.title(),def.core(),false));
         d.session.events.schedule.started(def,EventManager.day(server));d.setDirty();
+        if(!def.core())d.session.events.chances.granted(def,null);
         for(var player:MatchManager.associatedOnlinePlayers(server))player.sendSystemMessage(Component.literal(def.title()+" inbound: X "+position.getX()+" Z "+position.getZ()+". Check your map."));
         LogUtils.getLogger().info("[Exodus] Event airdrop {} spawned at {}",def.id(),position);return true;
     }

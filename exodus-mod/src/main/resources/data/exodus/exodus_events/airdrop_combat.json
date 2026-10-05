@@ -1,9 +1,11 @@
 {
-  "weight": 15,
-  "lootTable": "exodus:events/combat",
   "title": "Combat Airdrop",
-  "cooldownDays": 2,
-  "minDay": 3,
   "scope": "GLOBAL",
-  "objective": "WORLD_DROP"
+  "objective": "WORLD_DROP",
+  "minDay": 3,
+  "priority": 6,
+  "chancePercent": 20,
+  "chanceIncreasePercent": 20,
+  "cooldownDays": 0,
+  "lootTable": "exodus:events/combat"
 }

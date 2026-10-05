@@ -1,8 +1,11 @@
 {
-  "scope": "GLOBAL",
-  "weight": 40,
-  "minDay": 1,
-  "cooldownDays": 1,
+  "title": "Zombie Hunt",
+  "scope": "TARGETED",
   "objective": "KILL_ENTITY",
-  "title": "Zombie Hunt"
+  "participantSelector": "SINGLE_ACTIVE",
+  "minDay": 2,
+  "priority": 2,
+  "chancePercent": 30,
+  "chanceIncreasePercent": 30,
+  "cooldownDays": 0
 }

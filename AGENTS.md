@@ -45,6 +45,7 @@ approved zombie/soldier behavior. Real multiplayer performance remains manual ac
 - Work directly in the primary checkout on `main` and commit completed, verified changes there. Do not create another worktree for new work. This is the user's explicit project workflow preference.
 - Match-owned two-player parties are an approved exception, specified in `docs/superpowers/specs/2026-10-04-project-exodus-parties-design.md`.
 - Match-owned Zombie Hunt, Manhunt and event airdrops (including the unique day-5 Core) are approved exceptions, specified in `docs/superpowers/specs/2026-10-04-project-exodus-event-system-design.md`.
+- Their current daily scheduling, personal chances, and expanded airdrop catalog are specified in `docs/superpowers/specs/2026-10-05-project-exodus-daily-events-design.md`, which supersedes the original shared-hunt and weighted scheduling rules.
 
 - Every delivered mod change must increment `mod_version`; produce a newly versioned JAR and keep distribution output versions consistent. Never overwrite a released version with changed contents.
 - All installed gun attachments and Zero Contact items are approved chest-loot content. Higher actual scope zoom and greater net equipment benefits must be rarer. Preserve chest quantity.

@@ -1,0 +1,11 @@
+{
+  "title": "RPG Airdrop",
+  "scope": "GLOBAL",
+  "objective": "WORLD_DROP",
+  "minDay": 8,
+  "priority": 1,
+  "chancePercent": 10,
+  "chanceIncreasePercent": 20,
+  "cooldownDays": 0,
+  "lootTable": "exodus:events/rpg"
+}

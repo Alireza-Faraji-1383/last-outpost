@@ -7,6 +7,13 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class ResumeSubsystemsTest {
+ @Test void eventChancesAndWorldWindowsSurviveSaveWithoutReplay(){
+  UUID player=UUID.randomUUID();var def=new EventDefinition("exodus:test","Test",EventDefinition.Scope.GLOBAL,EventDefinition.Objective.KILL_ENTITY,1,0,1,false,1,0,"",false);
+  var s=new EventSavedState();s.chances.missed(def,player);s.chances.missed(def,null);
+  s.clock.observe(54000,24000);assertTrue(s.clock.noon(6000,12000));
+  var restored=EventSavedState.load(s.save());assertEquals(60,restored.chances.chance(def,player));assertEquals(60,restored.chances.chance(def,null));
+  restored.clock.observe(54001,24000);assertFalse(restored.clock.noon(6000,12000));assertEquals(3,restored.clock.day());
+ }
  @Test void partyDepartureAndInvitationSurviveSave(){
   UUID a=UUID.randomUUID(),b=UUID.randomUUID();var p=new PartyState(UUID.randomUUID(),2);p.create(a);p.invite(a,b,10,100);
   var r=PartyState.load(p.save());r.accept(b,a,20);r.leave(a,30,600);

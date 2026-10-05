@@ -23,7 +23,11 @@ public final class EventManager {
         if(current==null||!current.match.equals(d.matchId)){current=new Runtime(d.matchId,d.session.events.runs);RUNTIME.put(server,current);}return current;
     }
     public static List<ServerPlayer> players(MinecraftServer server){return MatchManager.associatedOnlinePlayers(server).stream().filter(p->MatchManager.isActiveMatchPlayer(p)&&p.isAlive()).sorted(Comparator.comparing(p->p.getUUID().toString())).toList();}
-    public static int day(MinecraftServer server){return EventSchedule.day(ExodusSavedData.get(server).session.elapsedTicks,ExodusConfig.EVENT_DAY_TICKS.get());}
+    public static int day(MinecraftServer server){
+        var d=ExodusSavedData.get(server);var level=d.dimension.isEmpty()?null:server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new net.minecraft.resources.ResourceLocation(d.dimension)));
+        if(level!=null)d.session.events.clock.observe(level.getDayTime(),ExodusConfig.EVENT_DAY_TICKS.get());
+        return d.session.events.clock.day();
+    }
     public static void tick(MinecraftServer server){
         var d=ExodusSavedData.get(server);if(d.state!=MatchState.RUNNING||d.matchId==null)return;
         var r=runtime(server);long now=d.session.elapsedTicks;
@@ -39,18 +43,26 @@ public final class EventManager {
         }
         EventAirdropService.tick(server);
         if(ExodusConfig.EVENTS_ENABLED.get()){
-            var schedule=d.session.events.schedule;int day=day(server);
+            var schedule=d.session.events.schedule;int day=day(server);var clock=d.session.events.clock;
             if(now% (ExodusConfig.EVENT_RETRY_SECONDS.get()*20L)==1)for(var def:schedule.milestones(EventCatalog.all(),day))start(server,def,false);
-            if(schedule.rollDay(day)){d.setDirty();if(r.random.nextDouble()<ExodusConfig.EVENT_DAILY_CHANCE.get()){
-                var eligible=EventCatalog.all().stream().filter(def->available(server,def)).toList();schedule.random(eligible,day,r.random).ifPresent(def->start(server,def,false));
-            }}
+            if(clock.morning(ExodusConfig.EVENT_NOON_TICK.get())) {
+                DailyEventDraw.airdrops(EventCatalog.all(),day,DailyEventDraw.dropCap(day,ExodusConfig.EVENT_DROP_CAPS.get()),d.session.events.chances,
+                        new Random(Objects.hash(d.matchId,day,"morning")),def->available(server,def)&&EventAirdropService.queue(server,def));d.setDirty();
+            }
+            if(clock.noon(ExodusConfig.EVENT_NOON_TICK.get(),ExodusConfig.EVENT_NIGHT_TICK.get())) {
+                var online=players(server).stream().map(ServerPlayer::getUUID).toList();Set<UUID> busy=new HashSet<>();r.runs.forEach(run->busy.addAll(run.progress().participants()));
+                DailyEventDraw.missions(EventCatalog.all(),day,online,busy,(a,b)->PartyService.sameParty(server,a,b),d.session.events.chances,
+                        new Random(Objects.hash(d.matchId,day,"noon")),assignment->startAssignment(server,assignment));d.setDirty();
+            }
         }
         if(now%20==1)render(server,r);
     }
     private static boolean available(MinecraftServer server,EventDefinition def){
         var r=runtime(server);
         return switch(def.objective()){
-            case KILL_ENTITY -> !players(server).isEmpty()&&r.runs.stream().noneMatch(run->run.progress().hunter()==null);
+            case KILL_ENTITY -> def.participantSelector()==EventDefinition.ParticipantSelector.SINGLE_ACTIVE
+                    ? players(server).stream().anyMatch(p->r.runs.stream().noneMatch(run->run.progress().participants().contains(p.getUUID())))
+                    : !players(server).isEmpty()&&r.runs.stream().noneMatch(run->run.progress().hunter()==null);
             case KILL_PLAYER -> !legalPairs(server,r).isEmpty();
             case WORLD_DROP -> EventAirdropService.available(server,def);
         };
@@ -70,11 +82,31 @@ public final class EventManager {
         if(!available(server,def))return false;
         var r=runtime(server);
         if(def.objective()==EventDefinition.Objective.WORLD_DROP)return EventAirdropService.queue(server,def);
+        if(def.participantSelector()==EventDefinition.ParticipantSelector.SINGLE_ACTIVE){
+            boolean started=false;for(var player:players(server))started|=startAssignment(server,new DailyEventDraw.Assignment(def,List.of(player.getUUID())));return started;
+        }
         ObjectiveProgress progress;
         if(def.objective()==EventDefinition.Objective.KILL_ENTITY){Set<UUID> ids=new HashSet<>();players(server).forEach(p->ids.add(p.getUUID()));progress=ObjectiveProgress.hunt(ids,d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_ZOMBIE_SECONDS.get())*20L,value(def.targetCount(),ExodusConfig.EVENT_ZOMBIE_GOAL.get()));}
         else{var pairs=legalPairs(server,r);if(pairs.isEmpty())return false;var pair=pairs.get(r.random.nextInt(pairs.size()));progress=ObjectiveProgress.manhunt(pair.hunter(),pair.prey(),d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_MANHUNT_SECONDS.get())*20L);}
+        return addRun(server,def,progress);
+    }
+    private static boolean startAssignment(MinecraftServer server,DailyEventDraw.Assignment assignment){
+        var d=ExodusSavedData.get(server);var r=runtime(server);var def=assignment.definition();var ids=assignment.players();
+        if(ids.isEmpty()||ids.stream().anyMatch(id->{var p=server.getPlayerList().getPlayer(id);return p==null||!p.isAlive()||!MatchManager.isActiveMatchPlayer(p)||r.runs.stream().anyMatch(run->run.progress().participants().contains(id));}))return false;
+        ObjectiveProgress progress;
+        if(def.objective()==EventDefinition.Objective.KILL_PLAYER){
+            if(ids.size()!=2||PartyService.sameParty(server,ids.get(0),ids.get(1)))return false;
+            progress=ObjectiveProgress.manhunt(ids.get(0),ids.get(1),d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_MANHUNT_SECONDS.get())*20L);
+        }else{
+            if(def.participantSelector()==EventDefinition.ParticipantSelector.SINGLE_ACTIVE&&ids.size()!=1)return false;
+            progress=ObjectiveProgress.hunt(Set.copyOf(ids),d.session.elapsedTicks,value(def.durationSeconds(),ExodusConfig.EVENT_ZOMBIE_SECONDS.get())*20L,value(def.targetCount(),ExodusConfig.EVENT_ZOMBIE_GOAL.get()));
+        }
+        boolean started=addRun(server,def,progress);if(started)ids.forEach(id->d.session.events.chances.granted(def,id));return started;
+    }
+    private static boolean addRun(MinecraftServer server,EventDefinition def,ObjectiveProgress progress){
+        var d=ExodusSavedData.get(server);var r=runtime(server);
         var run=new Run(UUID.randomUUID(),def,progress,value(def.rewardEmeralds(),ExodusConfig.EVENT_ZOMBIE_REWARD.get()),value(def.hunterEmeralds(),ExodusConfig.EVENT_HUNTER_REWARD.get()),value(def.preyEmeralds(),ExodusConfig.EVENT_PREY_REWARD.get()));r.runs.add(run);
-        d.session.events.schedule.started(def,day);d.setDirty();
+        d.session.events.schedule.started(def,day(server));d.setDirty();
         for(UUID id:progress.participants()){var p=server.getPlayerList().getPlayer(id);if(p!=null)p.sendSystemMessage(Component.literal(def.title()+" started. "+(progress.hunter()==null?"Kill "+progress.goal()+" zombies before time runs out.":id.equals(progress.hunter())?"You are the hunter. Your target is "+name(server,progress.prey())+".":"You are the prey. Survive until the timer expires.")));}
         LogUtils.getLogger().info("[Exodus] Event {} started ({})",def.id(),run.id());render(server,r);return true;
     }

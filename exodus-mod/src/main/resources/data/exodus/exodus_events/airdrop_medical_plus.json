@@ -1,0 +1,11 @@
+{
+  "title": "Medical Plus Airdrop",
+  "scope": "GLOBAL",
+  "objective": "WORLD_DROP",
+  "minDay": 4,
+  "priority": 5,
+  "chancePercent": 10,
+  "chanceIncreasePercent": 20,
+  "cooldownDays": 0,
+  "lootTable": "exodus:events/medical_plus"
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Sniper Airdrop",
+  "scope": "GLOBAL",
+  "objective": "WORLD_DROP",
+  "minDay": 7,
+  "priority": 2,
+  "chancePercent": 10,
+  "chanceIncreasePercent": 20,
+  "cooldownDays": 0,
+  "lootTable": "exodus:events/sniper"
+}
